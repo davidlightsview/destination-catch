@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
-import spots from '@/data/spots.json';
+import curated from '@/data/spots.json';
 import species from '@/data/species.json';
 import { getConditions } from '@/lib/conditions';
+import { findSpots } from '@/lib/osm';
 import { distanceKm, rateSpot, inSeason } from '@/lib/score.mjs';
+import { AGENCY, guessState } from '@/lib/regions.mjs';
 
-const RADIUS_KM = 150;
+export const maxDuration = 30;
+const CURATED_KM = 40;
+const SEARCH_KM = 25;
 
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
@@ -13,35 +17,57 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'A valid location is needed.' }, { status: 400 });
   }
 
-  const nearby = spots
+  const checked = curated
     .map((s) => ({ ...s, distanceKm: distanceKm(lat, lon, s.lat, s.lon) }))
-    .filter((s) => s.distanceKm <= RADIUS_KM)
-    .sort((a, b) => a.distanceKm - b.distanceKm);
+    .filter((s) => s.distanceKm <= CURATED_KM);
 
-  // One conditions call per region keeps us well inside the free API allowances.
-  const anchor = nearby[0] ?? { lat, lon };
-  let conditions;
-  try {
-    conditions = await getConditions(anchor.lat, anchor.lon);
-  } catch (e: any) {
-    return NextResponse.json({ error: 'Conditions are not available right now. Try again shortly.', detail: String(e?.message ?? e) }, { status: 502 });
+  const [condRes, found] = await Promise.all([
+    getConditions(lat, lon).then((c) => ({ ok: true as const, c }), (e) => ({ ok: false as const, e })),
+    findSpots(lat, lon, SEARCH_KM).catch(() => ({ spots: [], state: guessState(lat, lon), ok: false })),
+  ]);
+  if (!condRes.ok) {
+    return NextResponse.json({ error: 'Conditions are not available right now. Try again shortly.' }, { status: 502 });
   }
+  const conditions = condRes.c;
 
+  // Drop map spots that sit on top of a checked spot.
+  const extra = found.spots.filter((f) => !checked.some((c) => distanceKm(c.lat, c.lon, f.lat, f.lon) < 0.4));
+  const all: any[] = [...checked, ...extra];
+
+  const state: string = found.state || guessState(lat, lon);
   const month = Number(conditions.nowLocal.slice(5, 7));
   const c = conditions.current;
   const cond = { windKmh: c.windKmh, gustKmh: c.gustKmh, windFromDeg: c.windFromDeg, swellM: c.swellM, swellPeriodS: c.swellPeriodS, tidePhase: conditions.tides.phaseNow, isLowLight: conditions.isLowLight };
   const sp2 = species as Record<string, any>;
-  const rated = nearby.map((s) => ({
-    ...s,
-    ...rateSpot(s, cond),
-    targets: s.species.map((id) => ({ id, ...sp2[id], inSeason: inSeason(sp2[id], month) })),
-  })).sort((a, b) => b.score - a.score || a.distanceKm - b.distanceKm);
+
+  const rated = all.map((s) => {
+    const r = rateSpot(s, cond);
+    // Checked spots get a small nudge so they list ahead of map finds in the same conditions.
+    const score = s.status === 'osm' ? r.score : r.score + 3;
+    return {
+      ...s, ...r, score,
+      targets: s.species.filter((id: string) => sp2[id]).map((id: string) => {
+        const f = sp2[id];
+        const limitsHere = f.limitsState && f.limitsState === state;
+        return { id, name: f.name, sci: f.sci, gear: f.gear, bait: f.bait, inSeason: inSeason(f, month), minSize: limitsHere ? f.minSize : null, bag: limitsHere ? f.bag : null };
+      }),
+    };
+  }).sort((a, b) => b.score - a.score || a.distanceKm - b.distanceKm).slice(0, 10);
+
+  const agency = (AGENCY as any)[state] ?? null;
+  let coverageNote: string | null = null;
+  if (!rated.length) coverageNote = found.ok
+    ? `We couldn't find fishing water within ${SEARCH_KM} km of here. Try a nearby coastal town, river or lake.`
+    : 'The spot finder is busy right now. Conditions are below. Try again in a minute for spots.';
 
   return NextResponse.json({
     location: { lat, lon },
+    state,
+    agency,
     spots: rated,
     conditions,
-    rulesSource: sp2._source,
-    coverageNote: nearby.length ? null : `No checked spots within ${RADIUS_KM} km yet. Conditions below are for your location.`,
+    rulesSource: state === 'Victoria' ? sp2._source : null,
+    coverageNote,
+    attribution: extra.length ? 'Spots found from OpenStreetMap data © OpenStreetMap contributors' : null,
   }, { headers: { 'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200' } });
 }

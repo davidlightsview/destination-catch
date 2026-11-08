@@ -1,51 +1,246 @@
 {
-  "_source": "VFA Recreational Fishing Guide 2026, checked 18 Oct 2026. Victorian marine and estuary limits only. Other states differ.",
-  "australian-salmon": {
-    "name": "Australian salmon", "sci": "Arripis trutta", "bestMonths": [1,2,3,4,5,6,7,8,9,10,11,12],
-    "minSize": "21 cm", "bag": "20 (combined with Australian herring)",
-    "gear": "10–12 ft surf rod, 4000–6000 reel, 6–8 kg line. Paternoster with a popper, or a 40–60 g metal slug.",
-    "bait": "Pilchard, bluebait, surf poppers, metal slugs"
-  },
-  "tailor": {
-    "name": "Tailor", "sci": "Pomatomus saltatrix", "bestMonths": [1,2,3,4,5,11,12],
-    "minSize": "23 cm", "bag": "20",
-    "gear": "Surf or estuary spin outfit. Use 15 kg leader or a short wire trace. They bite through light line.",
-    "bait": "Whole pilchard on ganged hooks, metal slugs"
-  },
-  "gummy-shark": {
-    "name": "Gummy shark", "sci": "Mustelus antarcticus", "bestMonths": [1,2,3,4,10,11,12],
-    "minSize": "45 cm (partial length)", "bag": "2 (combined with school shark)",
-    "gear": "Heavy surf rod, 10–15 kg line, running sinker rig with 6/0 circle hook. Fish after dark.",
-    "bait": "Fresh squid, salmon fillet, pilchard"
-  },
-  "black-bream": {
-    "name": "Black bream", "sci": "Acanthopagrus butcheri", "bestMonths": [1,2,3,4,8,9,10,11,12],
-    "minSize": "28 cm", "bag": "10 (combined with other bream and tarwhine)",
-    "gear": "1–4 kg spin outfit, 2500 reel, 6–8 lb fluorocarbon leader, size 4–1 hook, light running sinker.",
-    "bait": "Sandworm, prawn, crab, small soft plastics and blades"
-  },
-  "dusky-flathead": {
-    "name": "Dusky flathead", "sci": "Platycephalus fuscus", "bestMonths": [1,2,3,4,10,11,12],
-    "minSize": "30 cm, max 55 cm (slot)", "bag": "5",
-    "gear": "2–4 kg spin outfit, 10–12 lb leader. 3–4 inch soft plastic on a 1/8–1/4 oz jighead, kept on the bottom.",
-    "bait": "Soft plastics, whitebait, prawn"
-  },
-  "estuary-perch": {
-    "name": "Estuary perch", "sci": "Percalates colonorum", "bestMonths": [1,2,3,10,11,12],
-    "minSize": "27 cm", "bag": "5 (combined with Australian bass, max 2 bass)",
-    "gear": "Light spin outfit, 6–8 lb leader. Small hardbodies, surface lures at dusk.",
-    "bait": "Small hardbodies, shrimp, live baits near snags"
-  },
-  "luderick": {
-    "name": "Luderick", "sci": "Girella tricuspidata", "bestMonths": [4,5,6,7,8],
-    "minSize": "23 cm", "bag": "10",
-    "gear": "Long float rod, small float, size 10–8 hook, light leader.",
-    "bait": "Green weed, cabbage"
-  },
-  "yellow-eye-mullet": {
-    "name": "Yellow-eye mullet", "sci": "Aldrichetta forsteri", "bestMonths": [1,2,3,4,5,6,7,8,9,10,11,12],
-    "minSize": "None", "bag": "40 (combined, all mullet)",
-    "gear": "Light rod, small float, size 12–10 hook.",
-    "bait": "Bread, dough, small pieces of prawn"
-  }
+ "_source": "VFA Recreational Fishing Guide 2026, checked 18 Oct 2026. Victorian marine and estuary limits only. Other states differ.",
+ "australian-salmon": {
+  "name": "Australian salmon",
+  "sci": "Arripis trutta",
+  "bestMonths": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "minSize": "21 cm",
+  "bag": "20 (combined with Australian herring)",
+  "gear": "10–12 ft surf rod, 4000–6000 reel, 6–8 kg line. Paternoster with a popper, or a 40–60 g metal slug.",
+  "bait": "Pilchard, bluebait, surf poppers, metal slugs",
+  "limitsState": "Victoria"
+ },
+ "tailor": {
+  "name": "Tailor",
+  "sci": "Pomatomus saltatrix",
+  "bestMonths": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   11,
+   12
+  ],
+  "minSize": "23 cm",
+  "bag": "20",
+  "gear": "Surf or estuary spin outfit. Use 15 kg leader or a short wire trace. They bite through light line.",
+  "bait": "Whole pilchard on ganged hooks, metal slugs",
+  "limitsState": "Victoria"
+ },
+ "gummy-shark": {
+  "name": "Gummy shark",
+  "sci": "Mustelus antarcticus",
+  "bestMonths": [
+   1,
+   2,
+   3,
+   4,
+   10,
+   11,
+   12
+  ],
+  "minSize": "45 cm (partial length)",
+  "bag": "2 (combined with school shark)",
+  "gear": "Heavy surf rod, 10–15 kg line, running sinker rig with 6/0 circle hook. Fish after dark.",
+  "bait": "Fresh squid, salmon fillet, pilchard",
+  "limitsState": "Victoria"
+ },
+ "black-bream": {
+  "name": "Black bream",
+  "sci": "Acanthopagrus butcheri",
+  "bestMonths": [
+   1,
+   2,
+   3,
+   4,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "minSize": "28 cm",
+  "bag": "10 (combined with other bream and tarwhine)",
+  "gear": "1–4 kg spin outfit, 2500 reel, 6–8 lb fluorocarbon leader, size 4–1 hook, light running sinker.",
+  "bait": "Sandworm, prawn, crab, small soft plastics and blades",
+  "limitsState": "Victoria"
+ },
+ "dusky-flathead": {
+  "name": "Dusky flathead",
+  "sci": "Platycephalus fuscus",
+  "bestMonths": [
+   1,
+   2,
+   3,
+   4,
+   10,
+   11,
+   12
+  ],
+  "minSize": "30 cm, max 55 cm (slot)",
+  "bag": "5",
+  "gear": "2–4 kg spin outfit, 10–12 lb leader. 3–4 inch soft plastic on a 1/8–1/4 oz jighead, kept on the bottom.",
+  "bait": "Soft plastics, whitebait, prawn",
+  "limitsState": "Victoria"
+ },
+ "estuary-perch": {
+  "name": "Estuary perch",
+  "sci": "Percalates colonorum",
+  "bestMonths": [
+   1,
+   2,
+   3,
+   10,
+   11,
+   12
+  ],
+  "minSize": "27 cm",
+  "bag": "5 (combined with Australian bass, max 2 bass)",
+  "gear": "Light spin outfit, 6–8 lb leader. Small hardbodies, surface lures at dusk.",
+  "bait": "Small hardbodies, shrimp, live baits near snags",
+  "limitsState": "Victoria"
+ },
+ "luderick": {
+  "name": "Luderick",
+  "sci": "Girella tricuspidata",
+  "bestMonths": [
+   4,
+   5,
+   6,
+   7,
+   8
+  ],
+  "minSize": "23 cm",
+  "bag": "10",
+  "gear": "Long float rod, small float, size 10–8 hook, light leader.",
+  "bait": "Green weed, cabbage",
+  "limitsState": "Victoria"
+ },
+ "yellow-eye-mullet": {
+  "name": "Yellow-eye mullet",
+  "sci": "Aldrichetta forsteri",
+  "bestMonths": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "minSize": "None",
+  "bag": "40 (combined, all mullet)",
+  "gear": "Light rod, small float, size 12–10 hook.",
+  "bait": "Bread, dough, small pieces of prawn",
+  "limitsState": "Victoria"
+ },
+ "king-george-whiting": {
+  "name": "King George whiting",
+  "sci": "Sillaginodes punctatus",
+  "gear": "Light spin rod, 2–4 kg line, running sinker to a long trace with a size 6–4 long-shank hook. Berley helps.",
+  "bait": "Pipis, mussel, squid strips, bass yabbies"
+ },
+ "snapper": {
+  "name": "Snapper",
+  "sci": "Chrysophrys auratus",
+  "gear": "Medium boat rod, 6–10 kg line, paternoster or running sinker with 4/0–6/0 circle hooks. Fish reef edges and drop-offs.",
+  "bait": "Pilchards, squid, fresh fish fillets, soft plastics"
+ },
+ "squid": {
+  "name": "Squid (calamari)",
+  "sci": "Sepioteuthis australis",
+  "gear": "Light spin rod with a 2.5–3.0 size squid jig. Cast, let it sink, then slow lifts and pauses. Best over weed and around lights.",
+  "bait": "Prawn-style squid jigs, baited jigs with whitebait"
+ },
+ "sand-whiting": {
+  "name": "Sand whiting",
+  "sci": "Sillago ciliata",
+  "gear": "Light rod, 2–4 kg line, small running sinker to the hook, size 6–4 long-shank. Fish the shallows on a rising tide.",
+  "bait": "Beach worms, yabbies, pipis, small surface poppers"
+ },
+ "yellowfin-bream": {
+  "name": "Yellowfin bream",
+  "sci": "Acanthopagrus australis",
+  "gear": "1–4 kg spin outfit, 6–8 lb fluorocarbon leader, light running sinker and size 4–1 hook. Fish structure and edges.",
+  "bait": "Prawns, yabbies, mullet strips, small soft plastics"
+ },
+ "mulloway": {
+  "name": "Mulloway (jewfish)",
+  "sci": "Argyrosomus japonicus",
+  "gear": "Heavy surf or estuary rod, 10–15 kg line, running sinker with 6/0–8/0 hooks. Best at night on the tide change.",
+  "bait": "Live mullet, fresh squid, beach worms, large soft plastics"
+ },
+ "trevally": {
+  "name": "Trevally",
+  "sci": "Caranx spp.",
+  "gear": "Medium spin outfit, 4–8 kg line. Fast-retrieved metal slugs or soft plastics. They pull hard, so check your drag.",
+  "bait": "Pilchards, prawns, metal slugs, poppers"
+ },
+ "mangrove-jack": {
+  "name": "Mangrove jack",
+  "sci": "Lutjanus argentimaculatus",
+  "gear": "Stout baitcaster or spin rod, 8–10 kg braid, 30–40 lb leader. Fish tight to snags and lock up the drag.",
+  "bait": "Live baits, fresh fish strips, hardbody lures, soft plastics"
+ },
+ "barramundi": {
+  "name": "Barramundi",
+  "sci": "Lates calcarifer",
+  "gear": "Baitcaster or spin outfit, 10–15 kg braid, 40–60 lb leader. Fish snags, drains and creek mouths on the run-out.",
+  "bait": "Live mullet or prawns, hardbody lures, soft vibes"
+ },
+ "australian-herring": {
+  "name": "Australian herring (tommy ruff)",
+  "sci": "Arripis georgianus",
+  "gear": "Light spin rod, 2–4 kg line, float or small running sinker with a size 10–8 hook. Berley brings schools in.",
+  "bait": "Maggots, prawn pieces, small metal lures, gents"
+ },
+ "sand-flathead": {
+  "name": "Sand flathead",
+  "sci": "Platycephalus bassensis",
+  "gear": "Light to medium outfit, paternoster rig with size 1–1/0 hooks, fished on the bottom over sand.",
+  "bait": "Squid strips, pilchard pieces, soft plastics"
+ },
+ "murray-cod": {
+  "name": "Murray cod",
+  "sci": "Maccullochella peelii",
+  "gear": "Heavy baitcaster, 15–25 kg braid or mono, 60–80 lb leader. Fish deep holes and big timber. Seasonal closure applies in spring.",
+  "bait": "Large spinnerbaits, deep divers, cheese, yabbies, bardi grubs"
+ },
+ "golden-perch": {
+  "name": "Golden perch (yellowbelly)",
+  "sci": "Macquaria ambigua",
+  "gear": "Light to medium outfit, 4–6 kg line. Fish timber and rock bars in warmer months.",
+  "bait": "Shrimp, yabbies, worms, small spinnerbaits and lipless lures"
+ },
+ "redfin": {
+  "name": "Redfin (English perch)",
+  "sci": "Perca fluviatilis",
+  "gear": "Light spin outfit, 2–4 kg line. Fish weed edges and timber. In many states you must not release redfin alive.",
+  "bait": "Worms, small soft plastics, spinners, small hardbodies"
+ },
+ "trout": {
+  "name": "Trout",
+  "sci": "Oncorhynchus mykiss / Salmo trutta",
+  "gear": "Light spin or fly outfit, 2–3 kg line. Fish early and late around inflows and drop-offs.",
+  "bait": "Small spinners, soft plastics, mudeyes, scrub worms, flies"
+ }
 }

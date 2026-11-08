@@ -15,7 +15,18 @@ const VERDICT: Record<string, { label: string; line: string }> = {
   marginal: { label: 'Worth a crack', line: 'Fishable, but not perfect.' },
   no: { label: 'Give it a miss', line: 'Not worth the trip right now.' },
 };
-const WATER: Record<string, string> = { estuary: 'Estuary', surf: 'Surf beach', river: 'River', entrance: 'River mouth' };
+const WATER: Record<string, string> = { estuary: 'Estuary', surf: 'Surf beach', beach: 'Beach', river: 'River', entrance: 'River mouth', jetty: 'Jetty', rock: 'Rock wall', ramp: 'Boat ramp', lake: 'Lake', fresh_river: 'River' };
+const ART = new Set(['australian-salmon', 'tailor', 'gummy-shark', 'black-bream', 'dusky-flathead', 'estuary-perch', 'luderick', 'yellow-eye-mullet']);
+
+function FishPic({ id, name }: { id: string; name: string }) {
+  if (ART.has(id)) return <img src={`/species/${id}.webp`} alt={name} loading="lazy" />;
+  return (
+    <svg className="fish-outline" viewBox="0 0 120 50" role="img" aria-label={name}>
+      <path d="M8 25c14-15 40-19 62-12 8 2 16 6 22 11l18-12-5 13 5 13-18-12c-6 5-14 9-22 11-22 7-48 3-62-12z" fill="#9cc4c0" />
+      <circle cx="22" cy="23" r="2.6" fill="#0b2f3c" />
+    </svg>
+  );
+}
 const MAPBOX = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 const QUICK: Place[] = [
   { name: 'Marlo', state: 'Victoria', lat: -37.7985, lon: 148.5335 },
@@ -191,8 +202,8 @@ export default function Home() {
               <section className="verdict v-none">
                 <div>
                   <span className="kicker">{where}</span>
-                  <h2>We haven't mapped spots here yet</h2>
-                  <p>Here are the conditions so you can still make the call. We're adding new spots region by region.</p>
+                  <h2>No fishing spots found nearby</h2>
+                  <p>{plan.coverageNote}</p>
                 </div>
               </section>
             )}
@@ -251,7 +262,7 @@ export default function Home() {
                     <div className="catch">
                       {s.targets.map((t: any) => (
                         <figure key={t.id} className={t.inSeason ? '' : 'quiet'}>
-                          <img src={`/species/${t.id}.webp`} alt={t.name} loading="lazy" />
+                          <FishPic id={t.id} name={t.name} />
                           <figcaption>{t.name}{!t.inSeason && <small>Quieter this month</small>}</figcaption>
                         </figure>
                       ))}
@@ -263,12 +274,13 @@ export default function Home() {
                       <summary>Gear, bait and legal sizes</summary>
                       {s.targets.map((t: any) => (
                         <div className="rig-row" key={t.id}>
-                          <img src={`/species/${t.id}.webp`} alt="" />
+                          <FishPic id={t.id} name="" />
                           <div>
                             <h5>{t.name}</h5>
                             <p>{t.gear}</p>
                             <p className="bait"><b>Bait and lures:</b> {t.bait}</p>
-                            <p className="legal"><span>Keep from {t.minSize}</span><span>Bag {t.bag}</span></p>
+                            {t.minSize ? <p className="legal"><span>Keep from {t.minSize}</span><span>Bag {t.bag}</span></p>
+                              : plan.agency ? <p className="legal-link">Size and bag limits: <a href={plan.agency.url} target="_blank" rel="noopener">check {plan.agency.name}</a></p> : null}
                           </div>
                         </div>
                       ))}
@@ -276,7 +288,8 @@ export default function Home() {
 
                     <div className="spot-foot">
                       <a className="btn btn-dark" href={`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}`} target="_blank" rel="noopener">Take me there</a>
-                      {s.status !== 'verified' && <span className="unverified">Spot location not yet checked on site</span>}
+                      {s.status === 'osm' && <span className="unverified">Found on the map. Not yet checked by us.</span>}
+                      {s.status === 'imagery' && <span className="unverified">Spot location not yet checked on site</span>}
                     </div>
                   </article>
                 ))}
@@ -285,7 +298,8 @@ export default function Home() {
 
             <footer className="foot">
               <p><b>Stay safe.</b> Conditions change fast on the coast. Never fish rocks or big surf alone, and wear a lifejacket in boats and kayaks.</p>
-              <p>Bag and size limits: {plan.rulesSource} Always check current rules with your state fisheries agency.</p>
+              <p>Bag and size limits: {plan.rulesSource ? `${plan.rulesSource} ` : ''}{plan.agency ? <>Always check current rules with <a href={plan.agency.url} target="_blank" rel="noopener">{plan.agency.name}</a>.</> : 'Always check current rules with your state fisheries agency.'}</p>
+              {plan.attribution && <p className="small">{plan.attribution}</p>}
               <p className="small">{c.sources.join(' · ')}</p>
             </footer>
           </div>
