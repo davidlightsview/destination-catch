@@ -46,7 +46,7 @@ async function willyTides(lat: number, lon: number, startDate: string): Promise<
     const w = await call(`/locations/${id}/weather.json?forecasts=tides&days=3&startDate=${startDate}`, 'weather', 3600);
     const days = w?.forecasts?.tides?.days ?? [];
     const extremes: TidePoint[] = days.flatMap((d: any) => (d.entries ?? []).map((e: any) => ({ time: String(e.dateTime).replace(' ', 'T').slice(0, 16), height: Number(e.height), type: e.type === 'high' ? 'high' : 'low' })));
-    if (!extremes.length) { console.error(`[tides] no tide entries; forecast keys: ${w?.forecasts ? Object.keys(w.forecasts).join(',') : 'none'}`); return null; }
+    if (!extremes.length) { console.error(`[tides] no tide entries; tides block: ${JSON.stringify(w?.forecasts?.tides ?? null).slice(0, 600)}`); return null; }
     const name = found?.location?.name ?? found?.name;
     return { extremes, stationName: name };
   } catch (e: any) {
