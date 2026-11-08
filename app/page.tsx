@@ -1,31 +1,57 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { Logo } from './components/Logo';
+import { TideChart } from './components/TideChart';
 
 type Place = { name: string; state: string; lat: number; lon: number };
 
-const WEATHER: Record<number, string> = { 0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 80: 'Showers', 81: 'Showers', 82: 'Heavy showers', 95: 'Thunderstorm', 96: 'Thunderstorm', 99: 'Thunderstorm' };
+const WEATHER: Record<number, string> = { 0: 'Clear skies', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Fog', 51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 80: 'Showers', 81: 'Showers', 82: 'Heavy showers', 95: 'Thunderstorms', 96: 'Thunderstorms', 99: 'Thunderstorms' };
 const COMPASS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-const dir = (d: number | null) => (d == null ? '' : COMPASS[Math.round(d / 45) % 8]);
+const dir = (d: number | null | undefined) => (d == null ? '' : COMPASS[Math.round(d / 45) % 8]);
 const n = (v: number | null | undefined, dp = 0) => (v == null ? '–' : v.toFixed(dp));
 const hhmm = (s: string | null | undefined) => (s ? s.slice(11, 16) : '–');
-const LABEL: Record<string, string> = { go: 'Worth going', marginal: 'Marginal', no: "Don't bother" };
+const VERDICT: Record<string, { label: string; line: string }> = {
+  go: { label: 'Good to go', line: 'Conditions are on your side.' },
+  marginal: { label: 'Worth a crack', line: 'Fishable, but not perfect.' },
+  no: { label: 'Give it a miss', line: 'Not worth the trip right now.' },
+};
+const WATER: Record<string, string> = { estuary: 'Estuary', surf: 'Surf beach', river: 'River', entrance: 'River mouth' };
 const MAPBOX = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+const QUICK: Place[] = [
+  { name: 'Marlo', state: 'Victoria', lat: -37.7985, lon: 148.5335 },
+  { name: 'Lakes Entrance', state: 'Victoria', lat: -37.8668, lon: 148.0016 },
+  { name: 'Portland', state: 'Victoria', lat: -38.3423, lon: 141.6046 },
+];
+const SHOWCASE = [
+  ['australian-salmon', 'Australian salmon'], ['dusky-flathead', 'Dusky flathead'], ['black-bream', 'Black bream'], ['tailor', 'Tailor'],
+  ['estuary-perch', 'Estuary perch'], ['gummy-shark', 'Gummy shark'], ['luderick', 'Luderick'], ['yellow-eye-mullet', 'Yellow-eye mullet'],
+];
+
+function Arrow({ from }: { from: number | null | undefined }) {
+  if (from == null) return null;
+  // Wind "from" a bearing blows toward the opposite side.
+  return (
+    <svg className="arrow" viewBox="0 0 24 24" style={{ transform: `rotate(${(from + 180) % 360}deg)` }} aria-hidden="true">
+      <path d="M12 2l6 10h-4v10h-4V12H6z" fill="currentColor" />
+    </svg>
+  );
+}
 
 export default function Home() {
   const [q, setQ] = useState('');
   const [places, setPlaces] = useState<Place[]>([]);
-  const [where, setWhere] = useState<string>('');
+  const [where, setWhere] = useState('');
   const [plan, setPlan] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-
   const [searching, setSearching] = useState(false);
   const [noMatch, setNoMatch] = useState('');
   const [picked, setPicked] = useState(false);
+  const [mapFailed, setMapFailed] = useState(false);
 
   async function geocode(text: string): Promise<Place[]> {
     const r = await fetch(`/api/geocode?q=${encodeURIComponent(text)}`);
-    if (!r.ok) throw new Error('Place search is not available right now.');
+    if (!r.ok) throw new Error('Place search is down right now. Try again in a minute.');
     const j = await r.json();
     return j.results ?? [];
   }
@@ -42,6 +68,18 @@ export default function Home() {
     return () => clearTimeout(t);
   }, [q, picked]);
 
+  async function load(lat: number, lon: number, label: string) {
+    setBusy(true); setErr(''); setPlaces([]); setWhere(label); setMapFailed(false);
+    try {
+      const r = await fetch(`/api/plan?lat=${lat}&lon=${lon}`);
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || 'Something went wrong. Try again.');
+      setPlan(j);
+      setTimeout(() => document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    } catch (e: any) { setErr(e.message); setPlan(null); }
+    finally { setBusy(false); }
+  }
+
   function choose(p: Place) {
     const label = `${p.name}, ${p.state}`;
     setPicked(true); setQ(label); setPlaces([]);
@@ -54,150 +92,205 @@ export default function Home() {
     if (text.length < 2) { setErr('Type a town, beach or river first.'); return; }
     if (places.length) { choose(places[0]); return; }
     setSearching(true); setErr('');
-    try {
-      const res = await geocode(text);
-      if (res.length) choose(res[0]); else setNoMatch(text);
-    } catch (e: any) { setErr(e.message); }
+    try { const res = await geocode(text); if (res.length) choose(res[0]); else setNoMatch(text); }
+    catch (e: any) { setErr(e.message); }
     finally { setSearching(false); }
   }
 
-  async function load(lat: number, lon: number, label: string) {
-    setBusy(true); setErr(''); setPlaces([]); setWhere(label);
-    try {
-      const r = await fetch(`/api/plan?lat=${lat}&lon=${lon}`);
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error || 'Something went wrong.');
-      setPlan(j);
-    } catch (e: any) { setErr(e.message); setPlan(null); }
-    finally { setBusy(false); }
-  }
-
   function useMyLocation() {
-    if (!navigator.geolocation) { setErr('Your browser does not share location. Search for a place instead.'); return; }
-    setBusy(true);
+    if (!navigator.geolocation) { setErr("Your phone isn't sharing location. Type a place instead."); return; }
+    setBusy(true); setErr('');
     navigator.geolocation.getCurrentPosition(
-      (p) => load(p.coords.latitude, p.coords.longitude, 'Your location'),
-      () => { setBusy(false); setErr('Location was blocked. Search for a place instead.'); },
+      (p) => { setPicked(true); setQ('My location'); load(p.coords.latitude, p.coords.longitude, 'Your location'); },
+      () => { setBusy(false); setErr('Location is turned off for this site. Type a place instead.'); },
       { enableHighAccuracy: false, timeout: 10000 },
     );
   }
 
   const c = plan?.conditions;
-  const mapUrl = MAPBOX && plan?.spots?.length
-    ? `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${plan.spots.map((s: any, i: number) => `pin-s-${i + 1}+d9541e(${s.lon},${s.lat})`).join(',')}/auto/800x450@2x?padding=60&access_token=${MAPBOX}`
+  const best = plan?.spots?.[0];
+  const loc = plan?.location;
+  const mapUrl = MAPBOX && plan
+    ? plan.spots.length
+      ? `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/${plan.spots.map((s: any, i: number) => `pin-l-${i + 1}+e8571e(${s.lon.toFixed(5)},${s.lat.toFixed(5)})`).join(',')}/auto/900x500@2x?padding=70&access_token=${MAPBOX}`
+      : `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/static/pin-l+e8571e(${loc.lon.toFixed(5)},${loc.lat.toFixed(5)})/${loc.lon.toFixed(5)},${loc.lat.toFixed(5)},11/900x500@2x?access_token=${MAPBOX}`
     : null;
 
   return (
-    <main>
-      <header style={{ display: 'grid', gap: 6 }}>
-        <span className="eyebrow">Destination Catch · Preview</span>
-        <h1>Where should I fish?</h1>
-        <p className="muted">Pick a place or use your location. You'll get spots ranked for right now, what to target, what to use and the conditions.</p>
-      </header>
+    <>
+      <header className="hero">
+        <div className="wrap hero-inner">
+          <Logo light />
+          <h1>Where are they <span>biting?</span></h1>
+          <p className="hero-sub">Tell us where you're fishing. We'll show you the best spots right now, what you'll catch, what to rig up with, and whether it's worth heading out.</p>
 
-      <section className="card" aria-label="Choose a location">
-        <form className="search" onSubmit={onSubmit} role="search">
-          <label htmlFor="place" className="eyebrow" style={{ flexBasis: '100%' }}>Town, beach or river</label>
-          <input id="place" type="search" enterKeyHint="search" value={q} onChange={(e) => { setPicked(false); setQ(e.target.value); }} placeholder="e.g. Marlo, Lakes Entrance, Port Phillip" autoComplete="off" />
-          <button className="btn primary" type="submit" disabled={busy || searching}>Search</button>
-          <button className="btn" type="button" onClick={useMyLocation} disabled={busy}>Use my location</button>
-        </form>
-        {searching && <p className="muted">Looking up places…</p>}
-        {places.length > 0 && (
-          <div className="results" role="listbox" aria-label="Matching places">
-            {places.map((p) => (
-              <button key={`${p.lat},${p.lon}`} type="button" role="option" aria-selected="false" onClick={() => choose(p)}>
-                {p.name} <span className="muted">{p.state}</span>
-              </button>
-            ))}
-          </div>
-        )}
-        {noMatch && !searching && <p className="warn">No places found for "{noMatch}". Try the nearest town, or check the spelling.</p>}
-        {busy && <p className="muted">Checking conditions…</p>}
-        {err && <p className="error">{err}</p>}
-      </section>
-
-      {plan && c && (
-        <>
-          <section className="card" aria-label="Conditions">
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <h2>Conditions</h2><span className="eyebrow">{where} · {c.nowLocal.slice(11, 16)}</span>
-            </div>
-            <div className="stats">
-              <div className="stat"><b>{n(c.current.tempC)}°</b><span>{WEATHER[c.current.weatherCode] ?? 'Weather'}</span></div>
-              <div className="stat"><b>{n(c.current.windKmh)} km/h</b><span>Wind {dir(c.current.windFromDeg)}, gusts {n(c.current.gustKmh)}</span></div>
-              <div className="stat"><b>{n(c.current.swellM, 1)} m</b><span>Swell {dir(c.current.swellFromDeg)} {c.current.swellPeriodS ? `${n(c.current.swellPeriodS)} s` : ''}</span></div>
-              <div className="stat"><b>{c.tides.phaseNow ? c.tides.phaseNow[0].toUpperCase() + c.tides.phaseNow.slice(1) : '–'}</b><span>Tide now</span></div>
-              <div className="stat"><b>{hhmm(c.sun.sunrise)} / {hhmm(c.sun.sunset)}</b><span>Sunrise / sunset</span></div>
-            </div>
-            {c.tides.extremes.length > 0 && (
-              <div className="tides">
-                {c.tides.extremes.filter((e: any) => e.time >= c.nowLocal.slice(0, 13)).slice(0, 4).map((e: any) => (
-                  <span key={e.time}><b>{e.type === 'high' ? 'High' : 'Low'}</b> <span className="mono">{e.time.slice(11, 16)}</span> {e.time.slice(0, 10) !== c.nowLocal.slice(0, 10) ? 'tmrw ' : ''}<span className="muted">{n(e.height, 1)} m</span></span>
+          <form className="search" onSubmit={onSubmit} role="search">
+            <label htmlFor="place" className="sr-only">Town, beach or river</label>
+            <input id="place" type="search" enterKeyHint="search" value={q}
+              onChange={(e) => { setPicked(false); setQ(e.target.value); }}
+              placeholder="Town, beach or river" autoComplete="off" />
+            <button className="btn btn-lure" type="submit" disabled={busy || searching}>{busy ? 'Checking…' : 'Find spots'}</button>
+            {places.length > 0 && (
+              <div className="suggest" role="listbox" aria-label="Matching places">
+                {places.map((p) => (
+                  <button key={`${p.lat},${p.lon}`} type="button" role="option" aria-selected="false" onClick={() => choose(p)}>
+                    <b>{p.name}</b> <span>{p.state}</span>
+                  </button>
                 ))}
               </div>
             )}
-            {c.tides.source === 'willyweather' && c.tides.stationName && <p className="muted" style={{ fontSize: 13 }}>Tide times for {c.tides.stationName}.</p>}
-            {c.tides.source === 'modelled' && <p className="warn">Tide times are modelled and can be well out near estuaries. Proper tide tables arrive once the WillyWeather key is set.</p>}
-            {c.tides.source === 'none' && <p className="warn">No tide data for this spot yet.</p>}
-            <details>
-              <summary>Next 24 hours</summary>
-              <div className="hours"><table>
-                <thead><tr><th>Time</th><th>Wind</th><th>Gusts</th><th>Swell</th><th>Rain</th><th>Temp</th></tr></thead>
-                <tbody>{c.hours.filter((_: any, i: number) => i % 2 === 0).map((h: any) => (
-                  <tr key={h.time}><td className="mono">{h.time.slice(11, 16)}</td><td>{n(h.windKmh)} {dir(h.windFromDeg)}</td><td>{n(h.gustKmh)}</td><td>{n(h.swellM, 1)} m</td><td>{n(h.rainChance)}%</td><td>{n(h.tempC)}°</td></tr>
-                ))}</tbody>
-              </table></div>
-            </details>
-          </section>
+          </form>
+          <div className="hero-actions">
+            <button className="btn btn-ghost" type="button" onClick={useMyLocation} disabled={busy}>
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 00-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 1112 6.5a2.5 2.5 0 010 5z" /></svg>
+              Use where I am
+            </button>
+            <span className="try">Try: {QUICK.map((p, i) => (
+              <button key={p.name} type="button" className="link" onClick={() => choose(p)}>{p.name}{i < QUICK.length - 1 ? ',' : ''}</button>
+            ))}</span>
+          </div>
+          {searching && <p className="hero-note">Looking up places…</p>}
+          {noMatch && !searching && !places.length && <p className="hero-note warn-text">Couldn't find "{noMatch}". Try the nearest town.</p>}
+          {err && <p className="hero-note warn-text">{err}</p>}
+        </div>
+        <div className="hero-fish" aria-hidden="true">
+          <img src="/species/australian-salmon.webp" alt="" className="f1" />
+          <img src="/species/dusky-flathead.webp" alt="" className="f2" />
+          <img src="/species/tailor.webp" alt="" className="f3" />
+        </div>
+        <svg className="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30c120-24 240-24 360 0s240 24 360 0 240-24 360 0 240 24 360 0v30H0z" fill="var(--paper)" /></svg>
+      </header>
 
-          {plan.coverageNote && <p className="warn">{plan.coverageNote} We're adding spots region by region.</p>}
-
-          {plan.spots.length > 0 && (
-            <section style={{ display: 'grid', gap: 12 }} aria-label="Spots">
-              <h2>Best spots right now</h2>
-              {mapUrl && <img className="map" src={mapUrl} alt="Satellite map with the numbered spots" width={800} height={450} />}
-              {plan.spots.map((s: any, i: number) => (
-                <article className="card" key={s.id}>
-                  <div className="spot-head">
-                    <div style={{ display: 'grid', gap: 4 }}>
-                      <h3>{i + 1}. {s.name}</h3>
-                      <span className="eyebrow">{s.water} · {s.access === 'boat' ? 'boat or kayak' : 'land-based'} · {s.distanceKm < 0.1 ? "right here" : `${s.distanceKm.toFixed(s.distanceKm < 10 ? 1 : 0)} km`}</span>
-                    </div>
-                    <span className={`badge ${s.rating}`}>{LABEL[s.rating]}</span>
-                  </div>
-                  <ul className="reasons">{s.reasons.map((r: string) => <li key={r}>{r}</li>)}</ul>
-                  <p>{s.how}</p>
-                  <p className="muted" style={{ fontSize: 14 }}>{s.getThere}</p>
-                  <div className="row">{s.targets.map((t: any) => <span key={t.id} className={`chip ${t.inSeason ? '' : 'off'}`}>{t.name}</span>)}</div>
-                  <details>
-                    <summary>Gear and rules for these fish</summary>
-                    <div className="fish">{s.targets.map((t: any) => (
-                      <div className="fish-row" key={t.id}>
-                        <b>{t.name} <i className="muted" style={{ fontWeight: 400 }}>{t.sci}</i>{!t.inSeason && <span className="muted"> · quieter this month</span>}</b>
-                        <span>{t.gear}</span>
-                        <span className="muted">Bait/lures: {t.bait}</span>
-                        <span className="mono" style={{ fontSize: 13 }}>Min {t.minSize} · Bag {t.bag}</span>
-                      </div>
-                    ))}</div>
-                  </details>
-                  <div className="row" style={{ fontSize: 14 }}>
-                    <span className="mono">{s.lat.toFixed(5)}, {s.lon.toFixed(5)}</span>
-                    <a href={`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}`} target="_blank" rel="noopener">Directions</a>
-                    {s.status !== 'verified' && <span className="muted">· position from imagery, not yet checked on site</span>}
-                  </div>
-                </article>
+      <main className="wrap">
+        {!plan && !busy && (
+          <section className="intro">
+            <h2>What's swimming around here</h2>
+            <p className="lead">From the surf to the snags. Each spot tells you what's on, the gear that works, and the legal size so you keep the right ones.</p>
+            <div className="showcase">
+              {SHOWCASE.map(([id, name]) => (
+                <figure key={id}><img src={`/species/${id}.webp`} alt={name} loading="lazy" /><figcaption>{name}</figcaption></figure>
               ))}
-            </section>
-          )}
+            </div>
+          </section>
+        )}
 
-          <footer>
-            <span>{c.sources.join(' · ')}</span>
-            <span>Rules: {plan.rulesSource} Always check the current rules with your state fisheries agency.</span>
-            <span>Conditions change fast on the coast. Never fish alone off rocks or in big surf, and wear a lifejacket on boats.</span>
-          </footer>
-        </>
-      )}
-    </main>
+        {busy && !plan && <div className="loading"><img src="/species/australian-salmon.webp" alt="" className="swim" /><p>Checking the wind, swell and tides…</p></div>}
+
+        {plan && c && (
+          <div id="results" className="results">
+            {best ? (
+              <section className={`verdict v-${best.rating}`}>
+                <div>
+                  <span className="kicker">Best bet near {where.split(',')[0]} right now</span>
+                  <h2>{best.name}</h2>
+                  <p>{VERDICT[best.rating].line}</p>
+                </div>
+                <span className="verdict-badge">{VERDICT[best.rating].label}</span>
+              </section>
+            ) : (
+              <section className="verdict v-none">
+                <div>
+                  <span className="kicker">{where}</span>
+                  <h2>We haven't mapped spots here yet</h2>
+                  <p>Here are the conditions so you can still make the call. We're adding new spots region by region.</p>
+                </div>
+              </section>
+            )}
+
+            <section className="panel conditions">
+              <div className="panel-head"><h2>On the water now</h2><span className="when">{where} · {hhmm(c.nowLocal)}</span></div>
+              <div className="tiles">
+                <div className="tile"><span className="t-label">Wind</span><span className="t-big"><Arrow from={c.current.windFromDeg} />{n(c.current.windKmh)}<small>km/h</small></span><span className="t-sub">From the {dir(c.current.windFromDeg)}, gusts {n(c.current.gustKmh)}</span></div>
+                <div className="tile"><span className="t-label">Swell</span><span className="t-big">{n(c.current.swellM, 1)}<small>m</small></span><span className="t-sub">{c.current.swellPeriodS ? `${n(c.current.swellPeriodS)} sec from the ${dir(c.current.swellFromDeg)}` : 'No swell reading'}</span></div>
+                <div className="tile"><span className="t-label">Weather</span><span className="t-big">{n(c.current.tempC)}°</span><span className="t-sub">{WEATHER[c.current.weatherCode] ?? ''}</span></div>
+                <div className="tile"><span className="t-label">Sun</span><span className="t-big t-mid">{hhmm(c.sun.sunrise)}<small>–</small>{hhmm(c.sun.sunset)}</span><span className="t-sub">First and last light bite best</span></div>
+              </div>
+              <div className="tide">
+                <div className="tide-head">
+                  <span className="t-label">Tide</span>
+                  <b>{c.tides.phaseNow === 'rising' ? 'Coming in' : c.tides.phaseNow === 'falling' ? 'Going out' : c.tides.phaseNow === 'slack' ? 'Turning (slack)' : 'Unknown'}</b>
+                  {c.tides.source === 'willyweather' && c.tides.stationName && <span className="t-sub">Times for {c.tides.stationName}</span>}
+                  {c.tides.source === 'modelled' && <span className="t-sub warn-text">Rough estimate only. No tide station nearby.</span>}
+                </div>
+                <TideChart extremes={c.tides.extremes} now={c.nowLocal} />
+              </div>
+              <div className="hours" aria-label="Next 24 hours">
+                {c.hours.filter((_: any, i: number) => i % 2 === 0).map((h: any) => (
+                  <div className="hour" key={h.time}>
+                    <span className="h-time">{h.time.slice(11, 16)}</span>
+                    <span className="h-wind"><Arrow from={h.windFromDeg} />{n(h.windKmh)}</span>
+                    <span className="h-swell">{n(h.swellM, 1)} m</span>
+                    <span className="h-rain">{n(h.rainChance)}% rain</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {mapUrl && !mapFailed && (
+              <section className="map-wrap">
+                <img className="map" src={mapUrl} alt={plan.spots.length ? 'Satellite map with the numbered spots' : `Satellite map of ${where}`} width={900} height={500} onError={() => setMapFailed(true)} />
+                {plan.spots.length > 0 && <span className="map-key">Numbers match the spots below</span>}
+              </section>
+            )}
+
+            {plan.spots.length > 0 && (
+              <section className="spots">
+                <h2 className="section-title">Spots, best first</h2>
+                {plan.spots.map((s: any, i: number) => (
+                  <article className={`spot r-${s.rating}`} key={s.id}>
+                    <div className="spot-top">
+                      <span className="pin-no">{i + 1}</span>
+                      <div className="spot-name">
+                        <h3>{s.name}</h3>
+                        <span className="spot-meta">{WATER[s.water] ?? s.water} · {s.access === 'boat' ? 'Boat or kayak' : 'From the shore'} · {s.distanceKm < 0.1 ? 'Right here' : `${s.distanceKm.toFixed(s.distanceKm < 10 ? 1 : 0)} km away`}</span>
+                      </div>
+                      <span className={`rating rating-${s.rating}`}>{VERDICT[s.rating].label}</span>
+                    </div>
+                    <ul className="why">{s.reasons.map((r: string) => <li key={r}>{r}</li>)}</ul>
+
+                    <div className="catch">
+                      {s.targets.map((t: any) => (
+                        <figure key={t.id} className={t.inSeason ? '' : 'quiet'}>
+                          <img src={`/species/${t.id}.webp`} alt={t.name} loading="lazy" />
+                          <figcaption>{t.name}{!t.inSeason && <small>Quieter this month</small>}</figcaption>
+                        </figure>
+                      ))}
+                    </div>
+
+                    <div className="how"><h4>How to fish it</h4><p>{s.how}</p><p className="getting">{s.getThere}</p></div>
+
+                    <details className="rig">
+                      <summary>Gear, bait and legal sizes</summary>
+                      {s.targets.map((t: any) => (
+                        <div className="rig-row" key={t.id}>
+                          <img src={`/species/${t.id}.webp`} alt="" />
+                          <div>
+                            <h5>{t.name}</h5>
+                            <p>{t.gear}</p>
+                            <p className="bait"><b>Bait and lures:</b> {t.bait}</p>
+                            <p className="legal"><span>Keep from {t.minSize}</span><span>Bag {t.bag}</span></p>
+                          </div>
+                        </div>
+                      ))}
+                    </details>
+
+                    <div className="spot-foot">
+                      <a className="btn btn-dark" href={`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}`} target="_blank" rel="noopener">Take me there</a>
+                      {s.status !== 'verified' && <span className="unverified">Spot location not yet checked on site</span>}
+                    </div>
+                  </article>
+                ))}
+              </section>
+            )}
+
+            <footer className="foot">
+              <p><b>Stay safe.</b> Conditions change fast on the coast. Never fish rocks or big surf alone, and wear a lifejacket in boats and kayaks.</p>
+              <p>Bag and size limits: {plan.rulesSource} Always check current rules with your state fisheries agency.</p>
+              <p className="small">{c.sources.join(' · ')}</p>
+            </footer>
+          </div>
+        )}
+      </main>
+    </>
   );
 }
