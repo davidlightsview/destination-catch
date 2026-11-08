@@ -28,19 +28,29 @@ async function getJson(url: string, revalidate = 900) {
   return r.json();
 }
 
-async function willyTides(lat: number, lon: number, startDate: string): Promise<{ extremes: TidePoint[]; stationName?: string; swell?: TidePoint[] } | null> {
+async function willyTides(lat: number, lon: number, startDate: string): Promise<{ extremes: TidePoint[]; stationName?: string } | null> {
   const key = process.env.WILLYWEATHER_API_KEY;
-  if (!key) return null;
+  if (!key) { console.warn('[tides] WILLYWEATHER_API_KEY is not set'); return null; }
+  const base = `https://api.willyweather.com.au/v2/${encodeURIComponent(key)}`;
+  // Log status and response shape only. Never log the URL, it contains the key.
+  async function call(path: string, label: string, revalidate: number) {
+    const r = await fetch(`${base}${path}`, { next: { revalidate } });
+    const text = await r.text();
+    if (!r.ok) { console.error(`[tides] ${label} HTTP ${r.status}: ${text.slice(0, 300)}`); return null; }
+    try { return JSON.parse(text); } catch { console.error(`[tides] ${label} returned non-JSON: ${text.slice(0, 200)}`); return null; }
+  }
   try {
-    const base = `https://api.willyweather.com.au/v2/${encodeURIComponent(key)}`;
-    const found = await getJson(`${base}/search.json?lat=${lat}&lng=${lon}&units=distance:km`, 86400);
-    const id = found?.location?.id;
-    if (!id) return null;
-    const w = await getJson(`${base}/locations/${id}/weather.json?forecasts=tides&days=3&startDate=${startDate}`, 3600);
+    const found = await call(`/search.json?lat=${lat}&lng=${lon}&units=distance:km`, 'search', 86400);
+    const id = found?.location?.id ?? found?.id ?? (Array.isArray(found) ? found[0]?.id : undefined);
+    if (!id) { console.error(`[tides] search gave no location id; keys: ${found ? Object.keys(found).join(',') : 'none'}`); return null; }
+    const w = await call(`/locations/${id}/weather.json?forecasts=tides&days=3&startDate=${startDate}`, 'weather', 3600);
     const days = w?.forecasts?.tides?.days ?? [];
     const extremes: TidePoint[] = days.flatMap((d: any) => (d.entries ?? []).map((e: any) => ({ time: String(e.dateTime).replace(' ', 'T').slice(0, 16), height: Number(e.height), type: e.type === 'high' ? 'high' : 'low' })));
-    return extremes.length ? { extremes, stationName: found?.location?.name } : null;
-  } catch {
+    if (!extremes.length) { console.error(`[tides] no tide entries; forecast keys: ${w?.forecasts ? Object.keys(w.forecasts).join(',') : 'none'}`); return null; }
+    const name = found?.location?.name ?? found?.name;
+    return { extremes, stationName: name };
+  } catch (e: any) {
+    console.error(`[tides] request failed: ${String(e?.message ?? e).replace(key, '***')}`);
     return null;
   }
 }
