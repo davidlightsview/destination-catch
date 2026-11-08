@@ -8,7 +8,7 @@ import { AGENCY, guessState } from '@/lib/regions.mjs';
 
 export const maxDuration = 30;
 const CURATED_KM = 40;
-const SEARCH_KM = 25;
+const SEARCH_KM = 15;
 
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;

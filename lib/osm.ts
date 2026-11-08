@@ -28,33 +28,43 @@ function classify(t: Record<string, string>): { water: string; access: 'land' | 
   return null;
 }
 
-export async function findSpots(lat: number, lon: number, radiusKm = 25): Promise<{ spots: FoundSpot[]; state: string; ok: boolean }> {
-  const la = lat.toFixed(3), lo = lon.toFixed(3), r = Math.round(radiusKm * 1000);
-  const around = `(around:${r},${la},${lo})`;
-  const q = `[out:json][timeout:20];(
-nwr${around}[leisure=fishing];
-nwr${around}[man_made~"^(pier|jetty|breakwater|groyne)$"];
-nwr${around}[leisure=slipway];
-nwr${around}[natural=beach][name];
-way${around}[waterway=river][name];
-nwr${around}[natural=water][name][water~"^(lake|reservoir|lagoon|river)$"];
+export async function findSpots(lat: number, lon: number, radiusKm = 15): Promise<{ spots: FoundSpot[]; state: string; ok: boolean }> {
+  // A bounding box is far quicker for Overpass than an "around" radius.
+  const dLat = radiusKm / 111, dLon = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
+  const bb = `(${(lat - dLat).toFixed(3)},${(lon - dLon).toFixed(3)},${(lat + dLat).toFixed(3)},${(lon + dLon).toFixed(3)})`;
+  const la = lat.toFixed(3), lo = lon.toFixed(3);
+  const q = `[out:json][timeout:12];(
+nwr[leisure=fishing]${bb};
+nwr[man_made~"^(pier|jetty|breakwater|groyne)$"]${bb};
+nwr[leisure=slipway]${bb};
+nwr[natural=beach][name]${bb};
+way[waterway=river][name]${bb};
+nwr[natural=water][name][water~"^(lake|reservoir|lagoon|river)$"]${bb};
 );out tags center 400;
 is_in(${la},${lo})->.a;area.a["admin_level"="4"]["boundary"="administrative"];out tags;`;
 
+  // Ask every mirror at once and take the first good answer.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 14000);
   let data: any = null;
-  for (const ep of ENDPOINTS) {
-    try {
+  try {
+    data = await Promise.any(ENDPOINTS.map(async (ep) => {
       const res = await fetch(`${ep}?data=${encodeURIComponent(q)}`, {
         headers: { 'User-Agent': 'DestinationCatch/0.1 (fishing conditions app)' },
-        signal: AbortSignal.timeout(12000),
+        signal: ctrl.signal,
         next: { revalidate: 86400 },
       });
-      if (!res.ok) { console.error(`[osm] ${new URL(ep).host} HTTP ${res.status}`); continue; }
-      data = await res.json();
-      break;
-    } catch (e: any) {
-      console.error(`[osm] ${new URL(ep).host} failed: ${e?.message ?? e}`);
-    }
+      if (!res.ok) throw new Error(`${new URL(ep).host} HTTP ${res.status}`);
+      const j = await res.json();
+      if (!Array.isArray(j?.elements)) throw new Error(`${new URL(ep).host} bad response`);
+      return j;
+    }));
+  } catch (e: any) {
+    const errs = e?.errors?.map((x: any) => x?.message).join('; ') ?? e?.message;
+    console.error(`[osm] all mirrors failed: ${errs}`);
+  } finally {
+    clearTimeout(timer);
+    ctrl.abort();
   }
   if (!data) return { spots: [], state: guessState(lat, lon), ok: false };
 
