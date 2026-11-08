@@ -103,7 +103,8 @@ export async function getConditions(lat: number, lon: number): Promise<Condition
   } else if (marine?.hourly?.sea_level_height_msl?.some((v: number | null) => v != null)) {
     const pts: TidePoint[] = marine.hourly.time.map((t: string, i: number) => ({ time: t, height: marine.hourly.sea_level_height_msl[i] })).filter((p: TidePoint) => p.height != null);
     const asUtc = pts.map((p) => ({ time: p.time + ':00Z', height: p.height }));
-    tides = { source: 'modelled', points: pts, extremes: findExtremes(pts), phaseNow: tidePhaseAt(asUtc, now + ':00Z') };
+    const ex = findExtremes(pts);
+    tides = { source: 'modelled', points: pts, extremes: ex, phaseNow: phaseFromExtremes(ex, now) ?? tidePhaseAt(asUtc, now + ':00Z') };
     sources.push('Tides: Open-Meteo model (approximate)');
   }
 
