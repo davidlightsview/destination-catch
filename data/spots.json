@@ -1,0 +1,57 @@
+[
+  {
+    "id": "marlo-foreshore",
+    "region": "Marlo, East Gippsland VIC",
+    "name": "Marlo foreshore & jetty",
+    "lat": -37.79836, "lon": 148.533,
+    "water": "estuary", "access": "land",
+    "species": ["black-bream", "dusky-flathead", "tailor", "estuary-perch"],
+    "how": "Fish around the jetty pylons from late afternoon into dark. Cast lightly weighted baits or small plastics along the edge where the bank drops into the channel.",
+    "getThere": "Walk in from the town foreshore. Easiest spot for families and anyone without a boat.",
+    "status": "imagery"
+  },
+  {
+    "id": "marlo-flats",
+    "region": "Marlo, East Gippsland VIC",
+    "name": "Main basin sand flats",
+    "lat": -37.79893, "lon": 148.55028,
+    "water": "estuary", "access": "boat",
+    "species": ["dusky-flathead", "yellow-eye-mullet"],
+    "how": "Drift the edges of the bars on a moving tide and work plastics down the drop-off into the deeper channel.",
+    "getThere": "Launch at the Beach Road ramp. The flats are a short run east across the basin.",
+    "status": "imagery"
+  },
+  {
+    "id": "marlo-entrance",
+    "region": "Marlo, East Gippsland VIC",
+    "name": "Snowy River entrance",
+    "lat": -37.8021, "lon": 148.55736,
+    "water": "entrance", "access": "boat",
+    "species": ["dusky-flathead", "australian-salmon", "tailor"],
+    "how": "Fish the channel edges just inside the mouth late in the run-in. Anchor well back from the bar and keep watching the swell.",
+    "getThere": "Boat only, in calm conditions. Never cross the bar.",
+    "status": "imagery"
+  },
+  {
+    "id": "marlo-east-beach",
+    "region": "Marlo, East Gippsland VIC",
+    "name": "Ocean beach east of the mouth",
+    "lat": -37.80249, "lon": 148.56744,
+    "water": "surf", "access": "land", "beachFaces": 180,
+    "species": ["australian-salmon", "tailor", "gummy-shark"],
+    "how": "Pick a gutter: a band of darker, deeper water between the sandbank and the shore, ideally with a rip running out. Cast just past the first line of breakers.",
+    "getThere": "Beach tracks east of town. Exact track names and parking still to confirm.",
+    "status": "imagery"
+  },
+  {
+    "id": "marlo-upriver",
+    "region": "Marlo, East Gippsland VIC",
+    "name": "Snowy River, upstream channel",
+    "lat": -37.79461, "lon": 148.52472,
+    "water": "river", "access": "boat",
+    "species": ["black-bream", "estuary-perch"],
+    "how": "Work snags and undercut banks on the bends with slow lures fished close to cover.",
+    "getThere": "From the ramp, head upriver past the town foreshore.",
+    "status": "imagery"
+  }
+]

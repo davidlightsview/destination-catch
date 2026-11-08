@@ -1,0 +1,51 @@
+{
+  "_source": "VFA Recreational Fishing Guide 2026, checked 18 Oct 2026. Victorian marine and estuary limits only. Other states differ.",
+  "australian-salmon": {
+    "name": "Australian salmon", "sci": "Arripis trutta", "bestMonths": [1,2,3,4,5,6,7,8,9,10,11,12],
+    "minSize": "21 cm", "bag": "20 (combined with Australian herring)",
+    "gear": "10–12 ft surf rod, 4000–6000 reel, 6–8 kg line. Paternoster with a popper, or a 40–60 g metal slug.",
+    "bait": "Pilchard, bluebait, surf poppers, metal slugs"
+  },
+  "tailor": {
+    "name": "Tailor", "sci": "Pomatomus saltatrix", "bestMonths": [1,2,3,4,5,11,12],
+    "minSize": "23 cm", "bag": "20",
+    "gear": "Surf or estuary spin outfit. Use 15 kg leader or a short wire trace. They bite through light line.",
+    "bait": "Whole pilchard on ganged hooks, metal slugs"
+  },
+  "gummy-shark": {
+    "name": "Gummy shark", "sci": "Mustelus antarcticus", "bestMonths": [1,2,3,4,10,11,12],
+    "minSize": "45 cm (partial length)", "bag": "2 (combined with school shark)",
+    "gear": "Heavy surf rod, 10–15 kg line, running sinker rig with 6/0 circle hook. Fish after dark.",
+    "bait": "Fresh squid, salmon fillet, pilchard"
+  },
+  "black-bream": {
+    "name": "Black bream", "sci": "Acanthopagrus butcheri", "bestMonths": [1,2,3,4,8,9,10,11,12],
+    "minSize": "28 cm", "bag": "10 (combined with other bream and tarwhine)",
+    "gear": "1–4 kg spin outfit, 2500 reel, 6–8 lb fluorocarbon leader, size 4–1 hook, light running sinker.",
+    "bait": "Sandworm, prawn, crab, small soft plastics and blades"
+  },
+  "dusky-flathead": {
+    "name": "Dusky flathead", "sci": "Platycephalus fuscus", "bestMonths": [1,2,3,4,10,11,12],
+    "minSize": "30 cm, max 55 cm (slot)", "bag": "5",
+    "gear": "2–4 kg spin outfit, 10–12 lb leader. 3–4 inch soft plastic on a 1/8–1/4 oz jighead, kept on the bottom.",
+    "bait": "Soft plastics, whitebait, prawn"
+  },
+  "estuary-perch": {
+    "name": "Estuary perch", "sci": "Percalates colonorum", "bestMonths": [1,2,3,10,11,12],
+    "minSize": "27 cm", "bag": "5 (combined with Australian bass, max 2 bass)",
+    "gear": "Light spin outfit, 6–8 lb leader. Small hardbodies, surface lures at dusk.",
+    "bait": "Small hardbodies, shrimp, live baits near snags"
+  },
+  "luderick": {
+    "name": "Luderick", "sci": "Girella tricuspidata", "bestMonths": [4,5,6,7,8],
+    "minSize": "23 cm", "bag": "10",
+    "gear": "Long float rod, small float, size 10–8 hook, light leader.",
+    "bait": "Green weed, cabbage"
+  },
+  "yellow-eye-mullet": {
+    "name": "Yellow-eye mullet", "sci": "Aldrichetta forsteri", "bestMonths": [1,2,3,4,5,6,7,8,9,10,11,12],
+    "minSize": "None", "bag": "40 (combined, all mullet)",
+    "gear": "Light rod, small float, size 12–10 hook.",
+    "bait": "Bread, dough, small pieces of prawn"
+  }
+}

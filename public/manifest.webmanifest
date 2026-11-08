@@ -1,0 +1,11 @@
+{
+  "name": "Destination Catch",
+  "short_name": "Catch",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c1a1f",
+  "theme_color": "#0c1a1f",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
