@@ -94,7 +94,7 @@ export async function findSpots(lat: number, lon: number, radiusKm = 15): Promis
     const [la, lo, ti, name] = DATA.s[i];
     const type = DATA.types[ti];
     // Lakes count as salt only when they touch the coast (Gippsland Lakes yes, a suburban park pond no).
-    const sea = type === 'lake' ? DATA.s[i][5] === 1 : nearSea(la, lo);
+    const sea = type === 'lake' ? DATA.s[i][5] === 1 && !/reservoir|dam\b|weir|pondage/i.test(name) : nearSea(la, lo);
     const w = waterFor(type, sea);
     return {
       id: `osm-${i}`,
