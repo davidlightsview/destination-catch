@@ -1,117 +1,118 @@
-// Finds likely fishing spots near a point from OpenStreetMap (Overpass API). Data © OpenStreetMap contributors, ODbL.
+// Likely fishing spots near a point, from a prebuilt OpenStreetMap list (data/osm-au.json).
+// The list is rebuilt monthly by .github/workflows/osm-spots.yml. Data © OpenStreetMap contributors, ODbL.
+import au from '@/data/osm-au.json';
 import { distanceKm } from './score.mjs';
 import { zoneFor, speciesFor, howFor, guessState } from './regions.mjs';
-
-const ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
-];
 
 export type FoundSpot = {
   id: string; name: string; lat: number; lon: number; water: string; access: 'land' | 'boat';
   species: string[]; how: string; getThere: string; status: 'osm'; distanceKm: number;
 };
 
-function classify(t: Record<string, string>): { water: string; access: 'land' | 'boat'; label: string } | null {
-  if (t.leisure === 'fishing') return { water: 'estuary', access: 'land', label: 'Fishing spot' };
-  if (t.man_made === 'pier' || t.man_made === 'jetty') return { water: 'jetty', access: 'land', label: 'Jetty' };
-  if (t.man_made === 'breakwater' || t.man_made === 'groyne') return { water: 'rock', access: 'land', label: 'Rock wall' };
-  if (t.leisure === 'slipway') return { water: 'ramp', access: 'boat', label: 'Boat ramp' };
-  if (t.natural === 'beach') return { water: 'beach', access: 'land', label: 'Beach' };
-  if (t.waterway === 'river') return { water: 'river', access: 'land', label: 'River' };
-  if (t.natural === 'water') {
-    if (t.water === 'lagoon') return { water: 'estuary', access: 'land', label: 'Lagoon' };
-    if (t.water === 'river') return { water: 'river', access: 'land', label: 'River' };
-    return { water: 'lake', access: 'land', label: 'Lake' };
+type Row = [number, number, number, string, number, number?];
+const DATA = au as unknown as { types: string[]; states: string[]; s: Row[] };
+
+// Grid of 0.25 degree cells so a search only looks at nearby rows.
+const CELL = 0.25;
+const key = (lat: number, lon: number) => `${Math.floor(lat / CELL)}:${Math.floor(lon / CELL)}`;
+let grid: Map<string, number[]> | null = null;
+function index() {
+  if (grid) return grid;
+  grid = new Map();
+  DATA.s.forEach((r, i) => {
+    const k = key(r[0], r[1]);
+    const a = grid!.get(k);
+    if (a) a.push(i); else grid!.set(k, [i]);
+  });
+  return grid;
+}
+
+function near(lat: number, lon: number, radiusKm: number) {
+  const g = index();
+  const dLat = radiusKm / 111, dLon = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
+  const out: { i: number; d: number }[] = [];
+  for (let a = Math.floor((lat - dLat) / CELL); a <= Math.floor((lat + dLat) / CELL); a++) {
+    for (let b = Math.floor((lon - dLon) / CELL); b <= Math.floor((lon + dLon) / CELL); b++) {
+      for (const i of g.get(`${a}:${b}`) ?? []) {
+        const r = DATA.s[i];
+        const d = distanceKm(lat, lon, r[0], r[1]);
+        if (d <= radiusKm) out.push({ i, d });
+      }
+    }
   }
-  return null;
+  return out.sort((x, y) => x.d - y.d);
+}
+
+const LABEL: Record<string, string> = { fishing: 'Fishing spot', jetty: 'Jetty', rock: 'Rock wall', ramp: 'Boat ramp', beach: 'Beach', river: 'River', lake: 'Lake', lagoon: 'Lagoon' };
+
+// Turn the map feature type into the water types the ratings understand.
+function waterFor(type: string, coastal: boolean): { water: string; access: 'land' | 'boat' } {
+  if (coastal) {
+    switch (type) {
+      case 'jetty': return { water: 'jetty', access: 'land' };
+      case 'rock': return { water: 'rock', access: 'land' };
+      case 'ramp': return { water: 'ramp', access: 'boat' };
+      case 'beach': return { water: 'beach', access: 'land' };
+      case 'river': return { water: 'river', access: 'land' };
+      default: return { water: 'estuary', access: 'land' }; // fishing spot, lake or lagoon by the sea
+    }
+  }
+  if (type === 'river') return { water: 'fresh_river', access: 'land' };
+  if (type === 'ramp') return { water: 'lake', access: 'boat' };
+  if (type === 'fishing') return { water: 'fresh_river', access: 'land' };
+  return { water: 'lake', access: 'land' };
+}
+
+// Salt or tidal water: within 4-5 km of the coastline itself, or within 15 km of a beach, jetty or wall that is
+// (that catches the lower reaches of rivers like the Swan or the Brisbane, which run well inland from the coast).
+const seaCache = new Map<number, boolean>();
+function nearSea(lat: number, lon: number) {
+  const k = Math.round(lat * 100) * 100000 + Math.round(lon * 100);
+  const hit = seaCache.get(k);
+  if (hit !== undefined) return hit;
+  const v = near(lat, lon, 15).some(({ i, d }) => {
+    const r = DATA.s[i];
+    if (r[5] !== 1) return false;
+    if (d < 0.3) return true; // the spot itself sits on the coast
+    return ['beach', 'jetty', 'rock'].includes(DATA.types[r[2]]);
+  });
+  seaCache.set(k, v);
+  return v;
+}
+
+export function stateAt(lat: number, lon: number): string {
+  const hit = near(lat, lon, 30).find((h) => DATA.s[h.i][4] >= 0);
+  return hit ? DATA.states[DATA.s[hit.i][4]] : guessState(lat, lon);
 }
 
 export async function findSpots(lat: number, lon: number, radiusKm = 15): Promise<{ spots: FoundSpot[]; state: string; ok: boolean }> {
-  // A bounding box is far quicker for Overpass than an "around" radius.
-  const dLat = radiusKm / 111, dLon = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
-  const bb = `(${(lat - dLat).toFixed(3)},${(lon - dLon).toFixed(3)},${(lat + dLat).toFixed(3)},${(lon + dLon).toFixed(3)})`;
-  const la = lat.toFixed(3), lo = lon.toFixed(3);
-  const q = `[out:json][timeout:12];(
-nwr[leisure=fishing]${bb};
-nwr[man_made~"^(pier|jetty|breakwater|groyne)$"]${bb};
-nwr[leisure=slipway]${bb};
-nwr[natural=beach][name]${bb};
-way[waterway=river][name]${bb};
-nwr[natural=water][name][water~"^(lake|reservoir|lagoon|river)$"]${bb};
-);out tags center 400;
-is_in(${la},${lo})->.a;area.a["admin_level"="4"]["boundary"="administrative"];out tags;`;
-
-  // Ask every mirror at once and take the first good answer.
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 14000);
-  let data: any = null;
-  try {
-    data = await Promise.any(ENDPOINTS.map(async (ep) => {
-      const res = await fetch(`${ep}?data=${encodeURIComponent(q)}`, {
-        headers: { 'User-Agent': 'DestinationCatch/0.1 (fishing conditions app)' },
-        signal: ctrl.signal,
-        next: { revalidate: 86400 },
-      });
-      if (!res.ok) throw new Error(`${new URL(ep).host} HTTP ${res.status}`);
-      const j = await res.json();
-      if (!Array.isArray(j?.elements)) throw new Error(`${new URL(ep).host} bad response`);
-      return j;
-    }));
-  } catch (e: any) {
-    const errs = e?.errors?.map((x: any) => x?.message).join('; ') ?? e?.message;
-    console.error(`[osm] all mirrors failed: ${errs}`);
-  } finally {
-    clearTimeout(timer);
-    ctrl.abort();
-  }
-  if (!data) return { spots: [], state: guessState(lat, lon), ok: false };
-
-  const els: any[] = data.elements ?? [];
-  const stateEl = els.find((e) => e.type === 'area' && e.tags?.name);
-  const state: string = stateEl?.tags?.['name:en'] ?? stateEl?.tags?.name ?? guessState(lat, lon);
   const zone = zoneFor(lat, lon);
+  const hits = near(lat, lon, radiusKm);
+  const state = hits.length && DATA.s[hits[0].i][4] >= 0 ? DATA.states[DATA.s[hits[0].i][4]] : stateAt(lat, lon);
 
-  const raw: FoundSpot[] = [];
-  for (const e of els) {
-    if (e.type === 'area') continue;
-    const t = e.tags ?? {};
-    const c = classify(t);
-    const p = e.type === 'node' ? { lat: e.lat, lon: e.lon } : e.center;
-    if (!c || !p) continue;
-    raw.push({
-      id: `osm-${e.type[0]}${e.id}`,
-      name: t.name ?? c.label,
-      lat: p.lat, lon: p.lon,
-      water: c.water, access: c.access,
-      species: [], how: '', getThere: '', status: 'osm',
-      distanceKm: distanceKm(lat, lon, p.lat, p.lon),
-    });
-  }
+  const raw: FoundSpot[] = hits.map(({ i, d }) => {
+    const [la, lo, ti, name] = DATA.s[i];
+    const type = DATA.types[ti];
+    // Lakes count as salt only when they touch the coast (Gippsland Lakes yes, a suburban park pond no).
+    const sea = type === 'lake' ? DATA.s[i][5] === 1 : nearSea(la, lo);
+    const w = waterFor(type, sea);
+    return {
+      id: `osm-${i}`,
+      name: name || LABEL[type] || 'Fishing spot',
+      lat: la, lon: lo, water: w.water, access: w.access,
+      species: speciesFor(zone, w.water, la), how: howFor(w.water),
+      getThere: w.access === 'boat'
+        ? 'Use the directions button to get to the ramp. Check signs for parking and launch fees.'
+        : 'Use the directions button to get there. Check local signs for access and parking.',
+      status: 'osm', distanceKm: d,
+    };
+  });
 
-  // Is this stretch of coast? Any beach, jetty, rock wall or ramp nearby says yes.
-  const coastal = raw.filter((s) => ['beach', 'jetty', 'rock', 'ramp'].includes(s.water));
-  for (const s of raw) {
-    if (s.water === 'river' || s.water === 'lake') {
-      const nearCoast = coastal.some((k) => distanceKm(s.lat, s.lon, k.lat, k.lon) < 6);
-      if (!nearCoast) s.water = s.water === 'river' ? 'fresh_river' : 'lake';
-      else if (s.water === 'lake') s.water = 'estuary';
-    }
-    if (s.water === 'estuary' && s.name === 'Fishing spot' && !coastal.length) s.water = 'fresh_river';
-    s.species = speciesFor(zone, s.water, s.lat);
-    s.how = howFor(s.water);
-    s.getThere = s.access === 'boat'
-      ? 'Use the directions button to get to the ramp. Check signs for parking and launch fees.'
-      : 'Use the directions button to get there. Check local signs for access and parking.';
-  }
-
-  // Unnamed jetties and ramps are useful; unnamed beaches and rivers are filtered by the query.
-  // De-duplicate: same name within 3 km (rivers are split into many pieces), or any two spots within 150 m.
-  raw.sort((a, b) => a.distanceKm - b.distanceKm);
+  // De-duplicate: same name within 3 km (rivers come as many points), or any two spots within 150 m.
+  const generic = new Set(Object.values(LABEL));
   const kept: FoundSpot[] = [];
   for (const s of raw) {
-    const dup = kept.some((k) => (k.name === s.name && k.name !== 'Jetty' && k.name !== 'Boat ramp' && k.name !== 'Rock wall' && distanceKm(k.lat, k.lon, s.lat, s.lon) < 3)
+    const dup = kept.some((k) => (k.name === s.name && !generic.has(k.name) && distanceKm(k.lat, k.lon, s.lat, s.lon) < 3)
       || distanceKm(k.lat, k.lon, s.lat, s.lon) < 0.15);
     if (!dup) kept.push(s);
   }

@@ -9,6 +9,7 @@ import { AGENCY, guessState } from '@/lib/regions.mjs';
 export const maxDuration = 30;
 const CURATED_KM = 40;
 const SEARCH_KM = 15;
+const WIDE_KM = 50;
 
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
@@ -23,7 +24,9 @@ export async function GET(req: Request) {
 
   const [condRes, found] = await Promise.all([
     getConditions(lat, lon).then((c) => ({ ok: true as const, c }), (e) => ({ ok: false as const, e })),
-    findSpots(lat, lon, SEARCH_KM).catch(() => ({ spots: [], state: guessState(lat, lon), ok: false })),
+    findSpots(lat, lon, SEARCH_KM)
+      .then((f) => (f.spots.length >= 3 ? f : findSpots(lat, lon, WIDE_KM)))
+      .catch(() => ({ spots: [], state: guessState(lat, lon), ok: false })),
   ]);
   if (!condRes.ok) {
     return NextResponse.json({ error: 'Conditions are not available right now. Try again shortly.' }, { status: 502 });
@@ -57,8 +60,8 @@ export async function GET(req: Request) {
   const agency = (AGENCY as any)[state] ?? null;
   let coverageNote: string | null = null;
   if (!rated.length) coverageNote = found.ok
-    ? `We couldn't find fishing water within ${SEARCH_KM} km of here. Try a nearby coastal town, river or lake.`
-    : 'The spot finder is busy right now. Conditions are below. Try again in a minute for spots.';
+    ? `We couldn't find fishing water within ${WIDE_KM} km of here. Try a nearby coastal town, river or lake.`
+    : 'Spots could not be loaded just now. Conditions are below.';
 
   return NextResponse.json({
     location: { lat, lon },
