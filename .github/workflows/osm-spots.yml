@@ -32,6 +32,7 @@ jobs:
             nwr/man_made=pier,jetty,breakwater,groyne \
             nwr/natural=beach,water \
             w/waterway=river \
+            w/natural=coastline \
             r/admin_level=4 \
             -o f.osm.pbf --overwrite
           ls -lh f.osm.pbf
@@ -44,4 +45,5 @@ jobs:
           git add data/osm-au.json
           git diff --cached --quiet && echo "no change" && exit 0
           git commit -m "Refresh spot data from OpenStreetMap"
+          git pull --rebase -q origin ${GITHUB_REF_NAME} || true
           git push

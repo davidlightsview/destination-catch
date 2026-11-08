@@ -2,11 +2,11 @@
 """Build data/osm-au.json: likely fishing spots across Australia from an OpenStreetMap extract.
 
 Input: a filtered .osm.pbf (see .github/workflows/osm-spots.yml). Data © OpenStreetMap contributors, ODbL.
-Output: {"v":1,"built":..., "types":[...], "states":[...], "s":[[lat, lon, typeIdx, name, stateIdx], ...]}
+Output: {"v":1,"built":..., "types":[...], "states":[...], "s":[[lat, lon, typeIdx, name, stateIdx, coastal 0/1], ...]}
 """
 import json, math, sys, datetime
 import osmium
-from shapely.geometry import Point, Polygon, MultiPolygon
+from shapely.geometry import Point, Polygon, MultiPolygon, LineString
 from shapely.strtree import STRtree
 
 TYPES = ['fishing', 'jetty', 'rock', 'ramp', 'beach', 'river', 'lake', 'lagoon']
@@ -27,6 +27,7 @@ class H(osmium.SimpleHandler):
         self.spots = []        # (lat, lon, type, name)
         self.rivers = {}       # name -> list of (lat, lon)
         self.states = []       # (name, shapely geom)
+        self.coast = []        # coastline pieces
 
     def add(self, lat, lon, t, name):
         if -45 < lat < -9 and 112 < lon < 155:
@@ -59,6 +60,10 @@ class H(osmium.SimpleHandler):
         except osmium.InvalidLocationError:
             return
         if not pts:
+            return
+        if tags.get('natural') == 'coastline':
+            if len(pts) >= 2:
+                self.coast.append(LineString([(p[1], p[0]) for p in pts]))
             return
         if tags.get('waterway') == 'river' and tags.get('name'):
             self.rivers.setdefault(tags['name'], []).extend(pts[:: max(1, len(pts) // 20)] + [pts[-1]])
@@ -142,8 +147,14 @@ def main(src, out):
     names = [n for n, _ in h.states]
     geoms = [g for _, g in h.states]
     tree = STRtree(geoms) if geoms else None
+    ctree = STRtree(h.coast) if h.coast else None
     out_rows = []
     for lat, lon, t, name in spots:
+        coastal = 0
+        if ctree is not None:
+            p = Point(lon, lat)
+            near = ctree.query(p.buffer(0.045))
+            coastal = 1 if len(near) and min(h.coast[int(i)].distance(p) for i in near) < 0.045 else 0
         si = -1
         if tree is not None:
             p = Point(lon, lat)
@@ -152,7 +163,7 @@ def main(src, out):
                 si = int(hit[0])
             else:
                 si = int(tree.nearest(p))
-        out_rows.append([lat, lon, T[t], name, si])
+        out_rows.append([lat, lon, T[t], name, si, coastal])
 
     doc = {
         'v': 1,
@@ -167,7 +178,7 @@ def main(src, out):
     counts = {}
     for r in out_rows:
         counts[TYPES[r[2]]] = counts.get(TYPES[r[2]], 0) + 1
-    print('spots', len(out_rows), counts, 'states', names)
+    print('spots', len(out_rows), counts, 'coastal', sum(r[5] for r in out_rows), 'coast pieces', len(h.coast), 'states', names)
 
 
 if __name__ == '__main__':
