@@ -16,7 +16,7 @@ const VERDICT: Record<string, { label: string; line: string }> = {
   no: { label: 'Give it a miss', line: 'Not worth the trip right now.' },
 };
 const WATER: Record<string, string> = { estuary: 'Estuary', surf: 'Surf beach', beach: 'Beach', river: 'River', entrance: 'River mouth', jetty: 'Jetty', rock: 'Rock wall', ramp: 'Boat ramp', lake: 'Lake', fresh_river: 'River' };
-const ART = new Set(['australian-salmon', 'tailor', 'gummy-shark', 'black-bream', 'dusky-flathead', 'estuary-perch', 'luderick', 'yellow-eye-mullet']);
+const ART = new Set(['king-george-whiting', 'snapper', 'sand-whiting', 'australian-salmon', 'tailor', 'gummy-shark', 'black-bream', 'dusky-flathead', 'estuary-perch', 'luderick', 'yellow-eye-mullet']);
 
 function FishPic({ id, name }: { id: string; name: string }) {
   if (ART.has(id)) return <img src={`/species/${id}.webp`} alt={name} loading="lazy" />;
