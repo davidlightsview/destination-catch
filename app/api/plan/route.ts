@@ -57,7 +57,9 @@ export async function GET(req: Request) {
         return { id, name: f.name, sci: f.sci, gear: f.gear, bait: f.bait, inSeason: !closed && inSeason(f, month), closed, closedNote: closed ? f.closedNote : null, minSize: limitsHere ? f.minSize : null, bag: limitsHere ? f.bag : null };
       }),
     };
-  }).sort((a, b) => b.score - a.score || a.distanceKm - b.distanceKm).slice(0, 10);
+  }).sort((a, b) => b.score - a.score || a.distanceKm - b.distanceKm)
+    // Always show our checked spots; fill the rest of the ten with map finds.
+    .filter((s, _i, arr) => s.status !== 'osm' || arr.filter((x) => x.status !== 'osm').length + arr.filter((x) => x.status === 'osm').indexOf(s) < 10);
 
   const agency = (AGENCY as any)[state] ?? null;
   let coverageNote: string | null = null;
