@@ -19,13 +19,47 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
+  const [searching, setSearching] = useState(false);
+  const [noMatch, setNoMatch] = useState('');
+  const [picked, setPicked] = useState(false);
+
+  async function geocode(text: string): Promise<Place[]> {
+    const r = await fetch(`/api/geocode?q=${encodeURIComponent(text)}`);
+    if (!r.ok) throw new Error('Place search is not available right now.');
+    const j = await r.json();
+    return j.results ?? [];
+  }
+
   useEffect(() => {
-    if (q.trim().length < 2) { setPlaces([]); return; }
+    setNoMatch('');
+    if (picked || q.trim().length < 3) { setPlaces([]); return; }
     const t = setTimeout(async () => {
-      try { const r = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`); const j = await r.json(); setPlaces(j.results ?? []); } catch { setPlaces([]); }
-    }, 300);
+      setSearching(true);
+      try { const res = await geocode(q); setPlaces(res); if (!res.length) setNoMatch(q.trim()); }
+      catch { setPlaces([]); }
+      finally { setSearching(false); }
+    }, 350);
     return () => clearTimeout(t);
-  }, [q]);
+  }, [q, picked]);
+
+  function choose(p: Place) {
+    const label = `${p.name}, ${p.state}`;
+    setPicked(true); setQ(label); setPlaces([]);
+    load(p.lat, p.lon, label);
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const text = q.trim();
+    if (text.length < 2) { setErr('Type a town, beach or river first.'); return; }
+    if (places.length) { choose(places[0]); return; }
+    setSearching(true); setErr('');
+    try {
+      const res = await geocode(text);
+      if (res.length) choose(res[0]); else setNoMatch(text);
+    } catch (e: any) { setErr(e.message); }
+    finally { setSearching(false); }
+  }
 
   async function load(lat: number, lon: number, label: string) {
     setBusy(true); setErr(''); setPlaces([]); setWhere(label);
@@ -62,20 +96,23 @@ export default function Home() {
       </header>
 
       <section className="card" aria-label="Choose a location">
-        <div className="search">
+        <form className="search" onSubmit={onSubmit} role="search">
           <label htmlFor="place" className="eyebrow" style={{ flexBasis: '100%' }}>Town, beach or river</label>
-          <input id="place" value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. Marlo, Lakes Entrance, Port Phillip" autoComplete="off" />
+          <input id="place" type="search" enterKeyHint="search" value={q} onChange={(e) => { setPicked(false); setQ(e.target.value); }} placeholder="e.g. Marlo, Lakes Entrance, Port Phillip" autoComplete="off" />
+          <button className="btn primary" type="submit" disabled={busy || searching}>Search</button>
           <button className="btn" type="button" onClick={useMyLocation} disabled={busy}>Use my location</button>
-        </div>
+        </form>
+        {searching && <p className="muted">Looking up places…</p>}
         {places.length > 0 && (
-          <div className="results" role="listbox">
+          <div className="results" role="listbox" aria-label="Matching places">
             {places.map((p) => (
-              <button key={`${p.lat},${p.lon}`} type="button" onClick={() => { setQ(`${p.name}, ${p.state}`); load(p.lat, p.lon, `${p.name}, ${p.state}`); }}>
+              <button key={`${p.lat},${p.lon}`} type="button" role="option" aria-selected="false" onClick={() => choose(p)}>
                 {p.name} <span className="muted">{p.state}</span>
               </button>
             ))}
           </div>
         )}
+        {noMatch && !searching && <p className="warn">No places found for "{noMatch}". Try the nearest town, or check the spelling.</p>}
         {busy && <p className="muted">Checking conditions…</p>}
         {err && <p className="error">{err}</p>}
       </section>

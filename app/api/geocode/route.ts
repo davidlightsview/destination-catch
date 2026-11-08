@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
-  const q = new URL(req.url).searchParams.get('q')?.trim();
+  // "Marlo, Victoria" -> "Marlo": the place search matches names only.
+  const q = new URL(req.url).searchParams.get('q')?.split(',')[0].trim();
   if (!q || q.length < 2) return NextResponse.json({ results: [] });
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=en&countryCode=AU`;
   try {
