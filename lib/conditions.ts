@@ -43,11 +43,19 @@ async function willyTides(lat: number, lon: number, startDate: string): Promise<
     const found = await call(`/search.json?lat=${lat}&lng=${lon}&units=distance:km`, 'search', 86400);
     const id = found?.location?.id ?? found?.id ?? (Array.isArray(found) ? found[0]?.id : undefined);
     if (!id) { console.error(`[tides] search gave no location id; keys: ${found ? Object.keys(found).join(',') : 'none'}`); return null; }
-    const w = await call(`/locations/${id}/weather.json?forecasts=tides&days=3&startDate=${startDate}`, 'weather', 3600);
-    const days = w?.forecasts?.tides?.days ?? [];
-    const extremes: TidePoint[] = days.flatMap((d: any) => (d.entries ?? []).map((e: any) => ({ time: String(e.dateTime).replace(' ', 'T').slice(0, 16), height: Number(e.height), type: e.type === 'high' ? 'high' : 'low' })));
-    if (!extremes.length) { console.error(`[tides] no tide entries; tides block: ${JSON.stringify(w?.forecasts?.tides ?? null).slice(0, 600)}`); return null; }
-    const name = found?.location?.name ?? found?.name;
+    const parse = (w: any): TidePoint[] => (w?.forecasts?.tides?.days ?? []).flatMap((d: any) => (d.entries ?? []).map((e: any) => ({ time: String(e.dateTime).replace(' ', 'T').slice(0, 16), height: Number(e.height), type: e.type === 'high' ? 'high' : 'low' } as TidePoint)));
+    let name: string | undefined = found?.location?.name ?? found?.name;
+    let extremes = parse(await call(`/locations/${id}/weather.json?forecasts=tides&days=3&startDate=${startDate}`, 'weather', 3600));
+    if (!extremes.length) {
+      // Many towns have no tide station of their own. Use the closest location that does.
+      const near = await call(`/search/closest.json?id=${id}&weatherTypes=tides&units=distance:km`, 'closest', 86400);
+      const st = near?.tides?.[0] ?? near?.tide?.[0];
+      if (!st?.id) { console.error(`[tides] no nearby tide station; keys: ${near ? Object.keys(near).join(',') : 'none'}`); return null; }
+      extremes = parse(await call(`/locations/${st.id}/weather.json?forecasts=tides&days=3&startDate=${startDate}`, 'station', 3600));
+      const km = st.distance != null ? Math.round(Number(st.distance)) : null;
+      name = km != null ? `${st.name}, ${km} km away` : st.name;
+    }
+    if (!extremes.length) { console.error('[tides] station returned no tide entries'); return null; }
     return { extremes, stationName: name };
   } catch (e: any) {
     console.error(`[tides] request failed: ${String(e?.message ?? e).replace(key, '***')}`);

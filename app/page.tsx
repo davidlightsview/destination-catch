@@ -137,6 +137,7 @@ export default function Home() {
                 ))}
               </div>
             )}
+            {c.tides.source === 'willyweather' && c.tides.stationName && <p className="muted" style={{ fontSize: 13 }}>Tide times for {c.tides.stationName}.</p>}
             {c.tides.source === 'modelled' && <p className="warn">Tide times are modelled and can be well out near estuaries. Proper tide tables arrive once the WillyWeather key is set.</p>}
             {c.tides.source === 'none' && <p className="warn">No tide data for this spot yet.</p>}
             <details>
