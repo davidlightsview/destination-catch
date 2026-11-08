@@ -58,8 +58,11 @@ export async function GET(req: Request) {
       }),
     };
   }).sort((a, b) => b.score - a.score || a.distanceKm - b.distanceKm)
-    // Always show our checked spots; fill the rest of the ten with map finds.
-    .filter((s, _i, arr) => s.status !== 'osm' || arr.filter((x) => x.status !== 'osm').length + arr.filter((x) => x.status === 'osm').indexOf(s) < 10);
+    // Always show our checked spots; fill the rest of the ten with map finds, no more than two of a kind
+    // (so a town with five jetties doesn't push out the beach and the river).
+    .filter(((seen: Record<string, number>) => (s: any) => s.status !== 'osm' || (seen[s.water + s.access] = (seen[s.water + s.access] ?? 0) + 1) <= 2)({}));
+  const nChecked = rated.filter((s) => s.status !== 'osm').length;
+  rated.splice(0, rated.length, ...rated.filter((s) => s.status !== 'osm' || rated.filter((x) => x.status === 'osm').indexOf(s) < 10 - nChecked));
 
   const agency = (AGENCY as any)[state] ?? null;
   let coverageNote: string | null = null;
