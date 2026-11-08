@@ -222,7 +222,9 @@
  "murray-cod": {
   "name": "Murray cod",
   "sci": "Maccullochella peelii",
-  "gear": "Heavy baitcaster, 15–25 kg braid or mono, 60–80 lb leader. Fish deep holes and big timber. Seasonal closure applies in spring.",
+  "gear": "Heavy baitcaster, 15–25 kg braid or mono, 60–80 lb leader. Fish deep holes and big timber.",
+  "closed": {"default": [9, 10, 11], "Queensland": [8, 9, 10]},
+  "closedNote": "Closed season. Murray cod can't be targeted Sep to Nov in Vic, NSW, SA and the ACT (Aug to Oct in Qld).",
   "bait": "Large spinnerbaits, deep divers, cheese, yabbies, bardi grubs"
  },
  "golden-perch": {

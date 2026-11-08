@@ -263,7 +263,7 @@ export default function Home() {
                       {s.targets.map((t: any) => (
                         <figure key={t.id} className={t.inSeason ? '' : 'quiet'}>
                           <FishPic id={t.id} name={t.name} />
-                          <figcaption>{t.name}{!t.inSeason && <small>Quieter this month</small>}</figcaption>
+                          <figcaption>{t.name}{t.closed ? <small className="closed">Closed season</small> : !t.inSeason && <small>Quieter this month</small>}</figcaption>
                         </figure>
                       ))}
                     </div>
@@ -277,6 +277,7 @@ export default function Home() {
                           <FishPic id={t.id} name="" />
                           <div>
                             <h5>{t.name}</h5>
+                            {t.closedNote && <p className="closed-note">{t.closedNote}</p>}
                             <p>{t.gear}</p>
                             <p className="bait"><b>Bait and lures:</b> {t.bait}</p>
                             {t.minSize ? <p className="legal"><span>Keep from {t.minSize}</span><span>Bag {t.bag}</span></p>

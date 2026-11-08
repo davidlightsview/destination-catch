@@ -52,7 +52,9 @@ export async function GET(req: Request) {
       targets: s.species.filter((id: string) => sp2[id]).map((id: string) => {
         const f = sp2[id];
         const limitsHere = f.limitsState && f.limitsState === state;
-        return { id, name: f.name, sci: f.sci, gear: f.gear, bait: f.bait, inSeason: inSeason(f, month), minSize: limitsHere ? f.minSize : null, bag: limitsHere ? f.bag : null };
+        const closedMonths: number[] | undefined = f.closed ? (f.closed[state] ?? f.closed.default) : undefined;
+        const closed = !!closedMonths?.includes(month);
+        return { id, name: f.name, sci: f.sci, gear: f.gear, bait: f.bait, inSeason: !closed && inSeason(f, month), closed, closedNote: closed ? f.closedNote : null, minSize: limitsHere ? f.minSize : null, bag: limitsHere ? f.bag : null };
       }),
     };
   }).sort((a, b) => b.score - a.score || a.distanceKm - b.distanceKm).slice(0, 10);
