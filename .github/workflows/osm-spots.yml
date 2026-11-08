@@ -1,0 +1,47 @@
+name: Build spot data from OpenStreetMap
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 16 1 * *'   # monthly
+  push:
+    branches: [spots-everywhere]
+    paths:
+      - scripts/build_osm_spots.py
+      - .github/workflows/osm-spots.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool
+          pip install --quiet osmium shapely
+      - name: Download Australia extract
+        run: curl -sSfL -o au.osm.pbf https://download.geofabrik.de/australia-oceania/australia-latest.osm.pbf && ls -lh au.osm.pbf
+      - name: Keep only fishing-related features and state borders
+        run: |
+          osmium tags-filter au.osm.pbf \
+            nwr/leisure=fishing,slipway \
+            nwr/man_made=pier,jetty,breakwater,groyne \
+            nwr/natural=beach,water \
+            w/waterway=river \
+            r/admin_level=4 \
+            -o f.osm.pbf --overwrite
+          ls -lh f.osm.pbf
+      - name: Build data/osm-au.json
+        run: python3 scripts/build_osm_spots.py f.osm.pbf data/osm-au.json && ls -lh data/osm-au.json
+      - name: Commit
+        run: |
+          git config user.name "destination-catch-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/osm-au.json
+          git diff --cached --quiet && echo "no change" && exit 0
+          git commit -m "Refresh spot data from OpenStreetMap"
+          git push
