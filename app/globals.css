@@ -198,3 +198,47 @@ main.wrap{padding-top:28px;padding-bottom:40px}
 
 .catch figcaption small.closed { color: var(--no); font-weight: 700; }
 .closed-note { color: var(--no); font-weight: 600; }
+
+/* Gift memberships */
+.hero-slim .hero-inner{padding-bottom:40px}
+.hero-slim h1{font-size:clamp(40px,8vw,72px);max-width:14ch}
+.logo-link{text-decoration:none;justify-self:start}
+.gift-main{display:grid;gap:16px;padding-top:20px;padding-bottom:48px;max-width:680px}
+.gpanel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;display:grid;gap:12px}
+.gpanel h2{font-size:28px;font-weight:700;text-transform:uppercase;letter-spacing:.02em}
+.gift-main .small,.gift-form .small{font-size:14px;color:var(--muted)}
+.gift-form{display:grid;gap:14px}
+.gift-form label{display:grid;gap:6px;font-weight:600}
+.gift-form label span{font-weight:400;color:var(--muted);font-size:15px}
+.gift-form input{border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;font-size:18px;background:#fff;width:100%}
+.gift-names{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+@media (max-width:520px){.gift-names{grid-template-columns:1fr}}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#efe7d6;border-radius:14px;padding:5px}
+.seg button{border:0;background:none;border-radius:10px;min-height:46px;font-weight:700;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.gift-buy{width:100%;min-height:58px;font-size:20px}
+.form-err{color:var(--no);font-weight:600}
+.steps,.ticks{margin:0;padding-left:22px;display:grid;gap:8px}
+.terms p{font-size:15px;color:var(--muted)}
+.card-main{justify-items:center;text-align:center}
+.card-intro{display:grid;gap:8px}
+.card-intro h1{font-size:40px;font-weight:800;text-transform:uppercase}
+.gift-card{width:100%;max-width:380px;background:#fff;border:2px solid var(--deep);border-radius:20px;padding:22px;display:grid;gap:12px;justify-items:center;text-align:center}
+.gc-top{display:flex;align-items:center;gap:12px;text-align:left}
+.gc-brand{font:800 26px/1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.gc-what{font:700 20px/1.1 var(--display);text-transform:uppercase;letter-spacing:.08em;color:var(--lure)}
+.gc-names{font-size:18px}
+.gc-qr{width:210px;height:210px}
+.gc-qr svg{width:100%;height:100%;display:block}
+.gc-scan{font-weight:700}
+.gc-code{font-size:18px;letter-spacing:.04em}
+.gc-code b{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:20px}
+.gc-small{font-size:13px;color:var(--muted)}
+.card-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.redeem-done{display:grid;gap:12px;justify-items:start}
+.redeem-done h2{font-size:34px;color:var(--go)}
+@media print{
+  .no-print,.hero{display:none!important}
+  body{background:#fff}
+  .gift-card{margin:20mm auto;break-inside:avoid}
+}
