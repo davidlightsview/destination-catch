@@ -9,7 +9,7 @@ export const PRODUCT = "Destination Catch Founder's membership: 1 year of Pro";
 export const APP_TAG = 'destination-catch';
 export const VALID_YEARS = 3;
 export const PRO_DAYS = 365;
-export const SELLER = process.env.SELLER_NAME || 'Destination Catch';
+export { SELLER } from './site';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O or 1/I
 export function newCode() {

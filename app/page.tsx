@@ -1,4 +1,5 @@
 'use client';
+import GiftPromo from './components/GiftPromo';
 import { useEffect, useState } from 'react';
 import { Logo } from './components/Logo';
 import { TideChart } from './components/TideChart';
@@ -173,6 +174,7 @@ export default function Home() {
       </header>
 
       <main className="wrap">
+        {!plan && !busy && <GiftPromo />}
         {!plan && !busy && (
           <section className="intro">
             <h2>What's swimming around here</h2>
@@ -297,6 +299,7 @@ export default function Home() {
               </section>
             )}
 
+            <GiftPromo slim />
             <footer className="foot">
               <p><b>Stay safe.</b> Conditions change fast on the coast. Never fish rocks or big surf alone, and wear a lifejacket in boats and kayaks.</p>
               <p>Bag and size limits: {plan.rulesSource ? `${plan.rulesSource} ` : ''}{plan.agency ? <>Always check current rules with <a href={plan.agency.url} target="_blank" rel="noopener">{plan.agency.name}</a>.</> : 'Always check current rules with your state fisheries agency.'}</p>

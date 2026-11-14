@@ -4,6 +4,7 @@ import { headers } from 'next/headers';
 import QRCode from 'qrcode';
 import { LogoMark } from '../../components/Logo';
 import CardActions from './CardActions';
+import Bought from './Bought';
 import { stripe, stripeReady } from '@/lib/stripe';
 import { APP_TAG, expiryFrom, fmtDate, showCode } from '@/lib/gift';
 
@@ -52,6 +53,7 @@ export default async function CardPage({ searchParams }: { searchParams: { sessi
       </article>
 
       <CardActions link={link} self={self} />
+      <Bought id={s.id} value={(s.amount_total ?? 3999) / 100} />
     </main>
   );
 }

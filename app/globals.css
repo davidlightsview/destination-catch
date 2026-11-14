@@ -242,3 +242,65 @@ main.wrap{padding-top:28px;padding-bottom:40px}
   body{background:#fff}
   .gift-card{margin:20mm auto;break-inside:avoid}
 }
+
+/* Gift promo (home and gift page) */
+.gp-kicker{font:700 14px/1 var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--lure)}
+.gift-promo{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;color:var(--sand);border-radius:20px;padding:26px;margin-bottom:28px;
+  background:radial-gradient(90% 120% at 100% 0%,rgba(232,87,30,.28),transparent 60%),linear-gradient(160deg,#0f4c5c,#082430)}
+.gift-promo .gp-kicker{color:#ffb38f}
+.gift-promo h2{font-size:clamp(32px,5.4vw,50px);font-weight:800;text-transform:uppercase;margin:8px 0 10px}
+.gift-promo p{font-size:18px;color:#d6e4e2;max-width:46ch}
+.gp-actions{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-top:16px}
+.gp-note{font-size:15px;color:#b9cdca}
+.gift-promo-slim{grid-template-columns:1fr;padding:20px;margin-bottom:0}
+.gift-promo-slim h2{font-size:30px}
+.card-mock{background:#fff;color:var(--ink);border-radius:18px;padding:16px 18px;display:grid;gap:8px;justify-items:center;text-align:center;width:230px;transform:rotate(3deg);box-shadow:0 18px 40px rgba(0,0,0,.4)}
+.card-mock .gc-brand{font-size:21px}.card-mock .gc-what{font-size:16px}
+.card-mock img{width:120px;height:120px}
+.cm-names{font-size:15px}.cm-scan{font-weight:700;font-size:15px}
+@media (max-width:700px){.gift-promo{grid-template-columns:1fr}.gift-promo .card-mock{justify-self:center;transform:rotate(2deg)}}
+
+.hero-gift .hero-inner{padding-bottom:44px}
+.gift-hero-in{grid-template-columns:1fr auto;align-items:center;gap:28px}
+.gift-hero-text{display:grid;gap:14px}
+.hero-gift h1{font-size:clamp(44px,8vw,84px);margin-top:4px;max-width:12ch}
+.hero-gift .gp-kicker{color:#ffb38f;margin-top:16px}
+.hero-gift .hero-sub{max-width:38ch}
+.gift-hero-cta{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;font-size:15px;color:#b9cdca}
+.gift-hero-cta .btn{min-height:58px;font-size:20px}
+.hero-gift .card-mock{width:260px;margin-right:10px}
+@media (max-width:760px){.gift-hero-in{grid-template-columns:1fr}.hero-gift .card-mock{justify-self:center;margin:6px 0 0}}
+.gift-wide{max-width:980px}
+.trust{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.trust li{background:#e7f2ef;border-radius:14px;padding:12px 14px;font-size:15px;color:var(--muted);display:grid;gap:2px}
+.trust b{font:700 19px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em;color:var(--ink)}
+@media (max-width:640px){.trust{grid-template-columns:1fr}}
+.gift-cols{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;align-items:start}
+@media (max-width:760px){.gift-cols{grid-template-columns:1fr}}
+.gpanel.buy{border:2px solid var(--lure);scroll-margin-top:12px}
+.gets{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.gets h3{font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;margin-bottom:8px}
+@media (max-width:640px){.gets{grid-template-columns:1fr}}
+.fish-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;align-items:center;background:radial-gradient(120% 100% at 50% 0%,#e7f2ef,#d5e7e3);border-radius:14px;padding:14px}
+.fish-strip img{height:64px;width:100%;object-fit:contain;filter:drop-shadow(0 6px 8px rgba(16,35,45,.18))}
+.faq{display:grid;gap:0}
+.faq details{border-top:1px solid var(--line);padding:12px 0}
+.faq details:first-child{border-top:0}
+.faq summary{font-weight:700;cursor:pointer;font-size:18px}
+.faq p{margin-top:8px;color:var(--muted)}
+.gift-last{display:grid;gap:12px;justify-items:center;text-align:center;padding:10px 0}
+.gift-last h2{font-size:34px;font-weight:800;text-transform:uppercase}
+.gift-last .btn{min-height:58px;font-size:20px}
+
+/* Site footer and legal pages */
+.site-foot{background:var(--deep);color:#b9cdca;font-size:15px;padding:22px 0 calc(22px + env(safe-area-inset-bottom,0px))}
+.site-foot-in{display:grid;gap:10px}
+.site-foot nav{display:flex;flex-wrap:wrap;gap:8px 18px}
+.site-foot a{color:var(--sand);font-weight:600}
+.legal{max-width:720px;display:grid;gap:12px;padding-top:24px;padding-bottom:48px}
+.legal h2{font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;margin-top:10px}
+.legal .small{font-size:14px;color:var(--muted)}
+.gift-promo .card-mock p{color:var(--ink);font-size:15px;max-width:none}
+.gift-promo .card-mock .gc-brand{font-size:21px}
+.gift-promo .card-mock .gc-what{color:var(--lure);font-size:16px}
+@media (max-width:700px){.gift-promo .card-mock{display:none}}

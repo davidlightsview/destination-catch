@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { track } from '../components/Tracking';
 
 export default function GiftForm({ open, price }: { open: boolean; price: string }) {
   const [kind, setKind] = useState<'gift' | 'self'>('gift');
@@ -16,7 +17,7 @@ export default function GiftForm({ open, price }: { open: boolean; price: string
     try {
       const r = await fetch('/api/gift/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind, to, from, src }) });
       const j = await r.json();
-      if (j.url) { location.href = j.url; return; }
+      if (j.url) { track('InitiateCheckout', { value: 39.99, currency: 'AUD' }); location.href = j.url; return; }
       setErr(j.error ?? 'Could not start the payment. Try again.');
     } catch { setErr('Could not start the payment. Check your connection and try again.'); }
     setBusy(false);
