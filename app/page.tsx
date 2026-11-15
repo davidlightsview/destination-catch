@@ -1,6 +1,6 @@
 'use client';
 import GiftPromo from './components/GiftPromo';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Logo } from './components/Logo';
 import { TideChart } from './components/TideChart';
 
@@ -60,6 +60,8 @@ export default function Home() {
   const [noMatch, setNoMatch] = useState('');
   const [picked, setPicked] = useState(false);
   const [mapFailed, setMapFailed] = useState(false);
+  const [active, setActive] = useState(-1);
+  const listRef = useRef<HTMLDivElement>(null);
 
   async function geocode(text: string): Promise<Place[]> {
     const r = await fetch(`/api/geocode?q=${encodeURIComponent(text)}`);
@@ -79,6 +81,34 @@ export default function Home() {
     }, 350);
     return () => clearTimeout(t);
   }, [q, picked]);
+
+  // Start a fresh list with nothing highlighted, and keep the highlighted one in view as the arrows move down it.
+  useEffect(() => { setActive(-1); }, [places]);
+  useEffect(() => { if (active >= 0) listRef.current?.children[active]?.scrollIntoView({ block: 'nearest' }); }, [active]);
+
+  // Fit the list into the space left under the input, so every option is reachable on a phone with the keyboard up.
+  useEffect(() => {
+    if (!places.length) return;
+    const vv = window.visualViewport;
+    const fit = () => {
+      const el = listRef.current;
+      if (!el) return;
+      const bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+      el.style.maxHeight = `${Math.max(176, bottom - el.getBoundingClientRect().top - 12)}px`;
+    };
+    fit();
+    vv?.addEventListener('resize', fit);
+    window.addEventListener('resize', fit);
+    return () => { vv?.removeEventListener('resize', fit); window.removeEventListener('resize', fit); };
+  }, [places]);
+
+  function onKey(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!places.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => (i + 1) % places.length); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => (i <= 0 ? places.length - 1 : i - 1)); }
+    else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); choose(places[active]); }
+    else if (e.key === 'Escape') { setPlaces([]); }
+  }
 
   async function load(lat: number, lon: number, label: string) {
     setBusy(true); setErr(''); setPlaces([]); setWhere(label); setMapFailed(false);
@@ -139,15 +169,19 @@ export default function Home() {
           <form className="search" onSubmit={onSubmit} role="search">
             <label htmlFor="place" className="sr-only">Town, beach or river</label>
             <input id="place" type="search" enterKeyHint="search" value={q}
-              onChange={(e) => { setPicked(false); setQ(e.target.value); }}
+              onChange={(e) => { setPicked(false); setQ(e.target.value); }} onKeyDown={onKey}
+              role="combobox" aria-expanded={places.length > 0} aria-controls="place-list" aria-autocomplete="list"
+              aria-activedescendant={active >= 0 ? `place-opt-${active}` : undefined}
               placeholder="Town, beach or river" autoComplete="off" />
             <button className="btn btn-lure" type="submit" disabled={busy || searching}>{busy ? 'Checking…' : 'Find spots'}</button>
             {places.length > 0 && (
-              <div className="suggest" role="listbox" aria-label="Matching places">
-                {places.map((p) => (
-                  <button key={`${p.lat},${p.lon}`} type="button" role="option" aria-selected="false" onClick={() => choose(p)}>
+              <div className="suggest" id="place-list" role="listbox" aria-label="Matching places" ref={listRef}>
+                {places.map((p, i) => (
+                  <div key={`${p.lat},${p.lon}`} id={`place-opt-${i}`} role="option" aria-selected={i === active}
+                    className={i === active ? 'on' : undefined} onMouseEnter={() => setActive(i)}
+                    onMouseDown={(e) => e.preventDefault()} onClick={() => choose(p)}>
                     <b>{p.name}</b> <span>{p.state}</span>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
