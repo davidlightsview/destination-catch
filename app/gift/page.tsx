@@ -84,7 +84,7 @@ export default function GiftPage() {
               </ul>
             </div>
             <div>
-              <h3>Pro, for Founders</h3>
+              <h3>Pro, for members</h3>
               <ul className="ticks">
                 <li>Plan My Fishing Trip: where to go, when, and what to take</li>
                 <li>The best times to fish over the next 7 days</li>

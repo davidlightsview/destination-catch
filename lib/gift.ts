@@ -5,7 +5,7 @@ import { stripe } from './stripe';
 
 export const PRICE_CENTS = 3999;
 export const PRICE_LABEL = 'A$39.99';
-export const PRODUCT = "Destination Catch Founder's membership: 1 year of Pro";
+export const PRODUCT = 'Destination Catch Pro membership: 1 year';
 export const APP_TAG = 'destination-catch';
 export const VALID_YEARS = 3;
 export const PRO_DAYS = 365;

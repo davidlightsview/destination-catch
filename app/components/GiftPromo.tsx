@@ -19,7 +19,7 @@ export default function GiftPromo({ slim = false }: { slim?: boolean }) {
       <div className="gp-text">
         <span className="gp-kicker">Christmas, sorted</span>
         <h2>Give the fisho a year of Pro</h2>
-        <p>A Founder's membership for A$39.99. You get a card with a QR code to print or send. They scan it and their year starts, even on Christmas morning.</p>
+        <p>A Pro membership for A$39.99. You get a card with a QR code to print or send. They scan it and their year starts, even on Christmas morning.</p>
         <div className="gp-actions">
           <Link className="btn btn-lure" href="/gift">Give a membership</Link>
           <span className="gp-note">One payment. No renewal.</span>

@@ -34,8 +34,8 @@ export default async function CardPage({ searchParams }: { searchParams: { sessi
   return (
     <main className="wrap gift-main card-main">
       <div className="no-print card-intro">
-        <h1>{self ? "You're a Founder" : 'Your gift card is ready'}</h1>
-        <p>{self ? 'Thanks for backing us early. Tap the button to start your year of Pro.' : 'Paid, thanks. Print this card or send the link now, and keep this page bookmarked until the gift has been given.'}</p>
+        <h1>{self ? "You're a Pro member" : 'Your gift card is ready'}</h1>
+        <p>{self ? 'Thanks for joining. Tap the button to start your year of Pro.' : 'Paid, thanks. Print this card or send the link now, and keep this page bookmarked until the gift has been given.'}</p>
       </div>
 
       <article className="gift-card">

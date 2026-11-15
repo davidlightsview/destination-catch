@@ -20,8 +20,8 @@ export default function Terms() {
       <h2>Fishing rules</h2>
       <p>Size limits, bag limits, closed seasons, licences and protected areas are set by each state and change from time to time. We show reminders, but you're responsible for checking the current rules with your state fisheries agency. A spot shown in the app may be on private land, closed or restricted: follow local signs.</p>
 
-      <h2>Founder's memberships and gifts</h2>
-      <p>A Founder's membership is one year of Destination Catch Pro for {PRICE_LABEL}, including GST where it applies. It's a single payment and doesn't renew.</p>
+      <h2>Pro memberships and gifts</h2>
+      <p>A Pro membership is one year of Destination Catch Pro for {PRICE_LABEL}, including GST where it applies. It's a single payment and doesn't renew.</p>
       <p>A gift code is valid for {VALID_YEARS} years from the day it's bought. The expiry date is printed on the gift card. The year of Pro starts on the day the code is used. There are no fees after purchase. A code can be used once, by one person, and can't be exchanged for cash.</p>
       <p>Pro features open on 20 December 2026. If you buy before then, your year doesn't start until you use the code.</p>
 

@@ -40,7 +40,7 @@ export default function GiftForm({ open, price }: { open: boolean; price: string
         </div>
       )}
       <button className="btn btn-lure gift-buy" type="submit" disabled={busy || !open}>
-        {!open ? 'Opens 1 December' : busy ? 'One moment…' : kind === 'gift' ? `Buy the gift: ${price}` : `Join as a Founder: ${price}`}
+        {!open ? 'Opens 1 December' : busy ? 'One moment…' : kind === 'gift' ? `Buy the gift: ${price}` : `Get Pro for a year: ${price}`}
       </button>
       {err && <p className="form-err" role="alert">{err}</p>}
       <p className="small">Secure card payment by Stripe. One payment, no renewal.</p>
